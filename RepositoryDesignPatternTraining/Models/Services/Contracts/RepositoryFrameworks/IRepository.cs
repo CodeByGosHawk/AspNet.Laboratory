@@ -6,7 +6,7 @@ public interface IRepository<T> where T : class
     T SelectById(Guid Id);
     void Insert(T obj);
     void Update(T obj);
-    void Update(Guid Id, string values);
+    //void Update(Guid Id, string values);
     void Delete(Guid Id);
     void Delete(T obj);
     void Save();

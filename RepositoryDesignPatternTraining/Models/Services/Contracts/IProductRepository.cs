@@ -5,5 +5,4 @@ namespace RepositoryDesignPatternTraining.Models.Services.Contracts;
 
 public interface IProductRepository : IRepository<Product>
 {
-
 }
