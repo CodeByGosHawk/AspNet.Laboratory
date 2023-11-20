@@ -1,4 +1,6 @@
-﻿using RepositoryDesignPatternTraining.Models.DomainModels.PersonAggregates;
+﻿using Microsoft.EntityFrameworkCore;
+using RepositoryDesignPatternTraining.Models.DomainModels.PersonAggregates;
+using RepositoryDesignPatternTraining.Models.DomainModels.ProductAggregates;
 using RepositoryDesignPatternTraining.Models.Services.Contracts;
 using System.Net;
 
@@ -14,47 +16,130 @@ public class PersonRepository : IPersonRepository
     }
 
     #region[Create]
-    public void Insert(Person obj)
+    public string Insert(Person person)
     {
-        throw new NotImplementedException();
+        try
+        {
+            if (person is not null)
+            {
+                _dbContext.Add(person);
+                return "Succesfull";
+            }
+            else
+            {
+                return "person is null";
+            }
+
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
     #endregion
 
     #region[Read]
     public IEnumerable<Person> SelectAll()
     {
-        throw new NotImplementedException();
+        try
+        {
+            return _dbContext.Person;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
     public Person SelectById(Guid Id)
     {
-        throw new NotImplementedException();
+        try
+        {
+            return _dbContext.Person.Find(Id);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
     #endregion
 
     #region[Update]
-    public void Update(Person obj)
+    public string Update(Person person)
     {
-        throw new NotImplementedException();
+        try
+        {
+            if (person is not null)
+            {
+                _dbContext.Entry(person).State = EntityState.Modified;
+                return "Succesfull";
+            }
+            else
+            {
+                return "person is null";
+            }
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
     #endregion
 
     #region[Delete]
-    public void Delete(Guid Id)
+    public string Delete(Guid Id)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var deletedPerson = _dbContext.Person.Find(Id);
+            if (deletedPerson is not null)
+            {
+                _dbContext.Person.Remove(deletedPerson);
+                return "Succesfull";
+            }
+            else
+            {
+                return "person is null";
+            }
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
-    public void Delete(Person obj)
+    public string Delete(Person person)
     {
-        throw new NotImplementedException();
+        try
+        {
+            if (person is not null)
+            {
+                _dbContext.Person.Remove(person);
+                return "Succesfull";
+            }
+            else
+            {
+                return "person is null";
+            }
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
     #endregion
 
     #region[Save]
     public void Save()
     {
-        throw new NotImplementedException();
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
     #endregion
 }

@@ -14,48 +14,130 @@ public class ProductRepository : IProductRepository
     }
 
     #region[Create]
-    public void Insert(Product product)
+    public string Insert(Product product)
     {
-        if(product is not null) _dbContext.Add(product);
+        try
+        {
+            if (product is not null)
+            {
+                _dbContext.Add(product);
+                return "Succesfull";
+            }
+            else
+            {
+                return "product is null";
+            }
+
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
     #endregion
 
     #region[Read]
     public IEnumerable<Product> SelectAll()
     {
-        return _dbContext.Product;
+        try
+        {
+            return _dbContext.Product;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
     public Product SelectById(Guid Id)
     {
-        return _dbContext.Product.Find(Id);
+        try
+        {
+            return _dbContext.Product.Find(Id);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
     #endregion
 
     #region[Update]
-    public void Update(Product product)
+    public string Update(Product product)
     {
-        _dbContext.Entry(product).State = EntityState.Modified;
+        try
+        {
+            if(product is not null)
+            {
+                _dbContext.Entry(product).State = EntityState.Modified;
+                return "Succesfull";
+            }
+            else
+            {
+                return "product is null";
+            }
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
     #endregion
 
     #region[Delete]
-    public void Delete(Guid Id)
+    public string Delete(Guid Id)
     {
-        var deletedProduct = _dbContext.Product.Find(Id);
-        _dbContext.Product.Remove(deletedProduct);
+        try
+        {
+            var deletedProduct = _dbContext.Product.Find(Id);
+            if (deletedProduct is not null)
+            {
+                _dbContext.Product.Remove(deletedProduct);
+                return "Succesfull";
+            }
+            else
+            {
+                return "product is null";
+            }
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
-    public void Delete(Product product)
-    {
-        _dbContext.Product.Remove(product);
+    public string Delete(Product product)
+    { 
+        try
+        {
+            if (product is not null)
+            {
+                _dbContext.Product.Remove(product);
+                return "Succesfull";
+            }
+            else
+            {
+                return "product is null";
+            }
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
     #endregion
 
     #region[Save]
     public void Save()
     {
-        _dbContext.SaveChanges();
+        try
+        {
+            _dbContext.SaveChanges();
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
     #endregion
 }

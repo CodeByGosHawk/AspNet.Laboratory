@@ -4,10 +4,10 @@ public interface IRepository<T> where T : class
 {
     IEnumerable<T> SelectAll();
     T SelectById(Guid Id);
-    void Insert(T obj);
-    void Update(T obj);
-    //void Update(Guid Id, string values);
-    void Delete(Guid Id);
-    void Delete(T obj);
+    string Insert(T obj);
+    string Update(T obj);
+    //string Update(Guid Id, string values);
+    string Delete(Guid Id);
+    string Delete(T obj);
     void Save();
 }
