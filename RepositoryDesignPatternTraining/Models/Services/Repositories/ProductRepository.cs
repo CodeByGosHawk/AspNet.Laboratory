@@ -14,18 +14,18 @@ public class ProductRepository : IProductRepository
     }
 
     #region[Create]
-    public string Insert(Product product)
+    public bool Insert(Product product)
     {
         try
         {
             if (product is not null)
             {
                 _dbContext.Add(product);
-                return "Succesfull";
+                return true;
             }
             else
             {
-                return "product is null";
+                return false;
             }
 
         }
@@ -60,21 +60,33 @@ public class ProductRepository : IProductRepository
             throw;
         }
     }
+
+    public Product SelectByProductCode(string productCode)
+    {
+        try
+        {
+            return _dbContext.Product.FirstOrDefault(p => p.ProductCode == productCode);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
     #endregion
 
     #region[Update]
-    public string Update(Product product)
+    public bool Update(Product product)
     {
         try
         {
             if(product is not null)
             {
                 _dbContext.Entry(product).State = EntityState.Modified;
-                return "Succesfull";
+                return true;
             }
             else
             {
-                return "product is null";
+                return false;
             }
         }
         catch (Exception)
@@ -85,7 +97,7 @@ public class ProductRepository : IProductRepository
     #endregion
 
     #region[Delete]
-    public string Delete(Guid Id)
+    public bool Delete(Guid Id)
     {
         try
         {
@@ -93,11 +105,11 @@ public class ProductRepository : IProductRepository
             if (deletedProduct is not null)
             {
                 _dbContext.Product.Remove(deletedProduct);
-                return "Succesfull";
+                return true;
             }
             else
             {
-                return "product is null";
+                return false;
             }
         }
         catch (Exception)
@@ -106,18 +118,18 @@ public class ProductRepository : IProductRepository
         }
     }
 
-    public string Delete(Product product)
+    public bool Delete(Product product)
     { 
         try
         {
             if (product is not null)
             {
                 _dbContext.Product.Remove(product);
-                return "Succesfull";
+                return true;
             }
             else
             {
-                return "product is null";
+                return false;
             }
         }
         catch (Exception)

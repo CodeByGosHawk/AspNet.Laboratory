@@ -16,18 +16,18 @@ public class PersonRepository : IPersonRepository
     }
 
     #region[Create]
-    public string Insert(Person person)
+    public bool Insert(Person person)
     {
         try
         {
             if (person is not null)
             {
                 _dbContext.Add(person);
-                return "Succesfull";
+                return true;
             }
             else
             {
-                return "person is null";
+                return false;
             }
 
         }
@@ -62,21 +62,33 @@ public class PersonRepository : IPersonRepository
             throw;
         }
     }
+
+    public Person SelectByNationalCode(string nationalCode)
+    {
+        try
+        {
+            return _dbContext.Person.FirstOrDefault(p => p.NationalCode == nationalCode);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
     #endregion
 
     #region[Update]
-    public string Update(Person person)
+    public bool Update(Person person)
     {
         try
         {
             if (person is not null)
             {
                 _dbContext.Entry(person).State = EntityState.Modified;
-                return "Succesfull";
+                return true;
             }
             else
             {
-                return "person is null";
+                return false;
             }
         }
         catch (Exception)
@@ -87,7 +99,7 @@ public class PersonRepository : IPersonRepository
     #endregion
 
     #region[Delete]
-    public string Delete(Guid Id)
+    public bool Delete(Guid Id)
     {
         try
         {
@@ -95,11 +107,11 @@ public class PersonRepository : IPersonRepository
             if (deletedPerson is not null)
             {
                 _dbContext.Person.Remove(deletedPerson);
-                return "Succesfull";
+                return true;
             }
             else
             {
-                return "person is null";
+                return false;
             }
         }
         catch (Exception)
@@ -108,18 +120,18 @@ public class PersonRepository : IPersonRepository
         }
     }
 
-    public string Delete(Person person)
+    public bool Delete(Person person)
     {
         try
         {
             if (person is not null)
             {
                 _dbContext.Person.Remove(person);
-                return "Succesfull";
+                return true;
             }
             else
             {
-                return "person is null";
+                return false;
             }
         }
         catch (Exception)

@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RepositoryDesignPatternTraining.Models.Services;
+using RepositoryDesignPatternTraining.Models.Services.Contracts;
+using RepositoryDesignPatternTraining.Models.Services.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +10,7 @@ builder.Services.AddControllersWithViews();
 
 var connectionString = builder.Configuration.GetConnectionString("OnlineShop");
 builder.Services.AddDbContext<OnlineShopDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 
 var app = builder.Build();
 
@@ -28,6 +31,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     "default",
-    "{controller=Home}/{action=Index}/{id?}");
+    "{controller=Person}/{action=Index}/{id?}");
 
 app.Run();
