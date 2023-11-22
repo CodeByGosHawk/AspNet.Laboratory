@@ -84,6 +84,7 @@ public class PersonRepository : IPersonRepository
             if (person is not null)
             {
                 _dbContext.Entry(person).State = EntityState.Modified;
+                //_dbContext.Update(person);
                 return true;
             }
             else

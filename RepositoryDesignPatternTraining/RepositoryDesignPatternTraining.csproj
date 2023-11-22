@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <Folder Include="Models\Services\Contracts\RepositoryFrameworks\" />
-    <Folder Include="Views\Product\" />
   </ItemGroup>
 
   <ItemGroup>

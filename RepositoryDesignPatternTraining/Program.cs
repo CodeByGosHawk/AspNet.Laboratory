@@ -11,6 +11,7 @@ builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("OnlineShop");
 builder.Services.AddDbContext<OnlineShopDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddScoped<IPersonRepository, PersonRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 var app = builder.Build();
 
@@ -31,6 +32,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     "default",
-    "{controller=Person}/{action=Index}/{id?}");
+    "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

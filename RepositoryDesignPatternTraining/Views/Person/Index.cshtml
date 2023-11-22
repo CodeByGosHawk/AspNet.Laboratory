@@ -10,6 +10,9 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
+<p style="color:red;font-weight:bold">
+    @TempData["Index"]
+</p>
 <table class="table">
     <thead>
         <tr>
@@ -38,8 +41,8 @@
                 @person.NationalCode
             </td>
             <td>
-                <a asp-action="Update" asp-route-id="@person.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@person.Id">Details</a> |
+                <a asp-action="Update" asp-route-id="@person.Id">Edit</a> | 
+                <a asp-action="Details" asp-route-id="@person.Id">Details</a> | 
                 <a asp-action="Delete" asp-route-id="@person.Id">Delete</a>
             </td>
         </tr>

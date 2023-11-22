@@ -1,0 +1,43 @@
+﻿@model Product
+@using RepositoryDesignPatternTraining.Models.DomainModels.ProductAggregates
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Product</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            ProductCode
+        </dt>
+        <dt class="col-sm-2">
+            @Model.ProductCode
+        </dt>
+        <dt class="col-sm-2">
+            Title
+        </dt>
+        <dd class="col-sm-10">
+            @Model.Title
+        </dd>
+        <dt class="col-sm-2">
+            Quantity
+        </dt>
+        <dd class="col-sm-10">
+            @Model.Quantity
+        </dd>
+        <dt class="col-sm-2">
+            Unit Price
+        </dt>
+        <dd class="col-sm-10">
+            @Model.UnitPrice
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

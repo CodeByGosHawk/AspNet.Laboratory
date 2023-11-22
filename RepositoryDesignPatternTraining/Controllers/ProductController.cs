@@ -2,6 +2,8 @@
 using RepositoryDesignPatternTraining.Models.DomainModels.PersonAggregates;
 using RepositoryDesignPatternTraining.Models.DomainModels.ProductAggregates;
 using RepositoryDesignPatternTraining.Models.Services.Contracts;
+using RepositoryDesignPatternTraining.Models.Services.Repositories;
+using System;
 
 namespace RepositoryDesignPatternTraining.Controllers;
 
@@ -33,7 +35,7 @@ public class ProductController : Controller
 
         var product = _productRepository.SelectById(id);
         if (product is not null) return View(product);
-        TempData["ProductNotFound"] = "Product not found";
+        TempData["Index"] = "Product not found";
         return RedirectToAction(nameof(Index));
     }
     public IActionResult Create()
@@ -51,12 +53,12 @@ public class ProductController : Controller
         {
             _productRepository.Insert(product);
             _productRepository.Save();
-            TempData["NewProductCreated"] = "New product created";
+            TempData["Index"] = "New product created";
             return RedirectToAction(nameof(Index));
         }
         else if (ModelState.IsValid && existingProduct is not null)
         {
-            TempData["PersonAlreadyExists"] = $"Product with ProductCode : {product.ProductCode} already exist";
+            TempData["Create"] = $"Product with ProductCode : {product.ProductCode} already exist";
             return View();
         }
         else
@@ -72,7 +74,7 @@ public class ProductController : Controller
         var person = _productRepository.SelectById(Id);
         if (person is null)
         {
-            TempData["ProductDoesNotExist"] = "Product does not exist";
+            TempData["Index"] = "Product does not exist";
             return RedirectToAction(nameof(Index));
         }
         return View(person);
@@ -87,18 +89,23 @@ public class ProductController : Controller
         var existingProduct = _productRepository.SelectByProductCode(product.ProductCode);
         bool updateCondition = (existingProduct is not null && existingProduct.Id == product.Id) ||
                                 existingProduct is null ?
-                                true : false;
+        true : false;
 
         if (ModelState.IsValid && updateCondition)
         {
-            _productRepository.Update(product);
+            var updatedProduct = _productRepository.SelectById(product.Id);
+            updatedProduct.Title = product.Title;
+            updatedProduct.Quantity = product.Quantity;
+            updatedProduct.UnitPrice = product.UnitPrice;
+            updatedProduct.ProductCode = product.ProductCode;
+            _productRepository.Update(updatedProduct);
             _productRepository.Save();
-            TempData["UpdateSuccessful"] = "Update Successful";
+            TempData["Index"] = "Update Successful";
             return RedirectToAction(nameof(Index));
         }
         else if (ModelState.IsValid && !updateCondition)
         {
-            TempData["ProductAlreadyExists"] = $"Product with ProductCode : {product.ProductCode} already exist";
+            TempData["Update"] = $"Product with ProductCode : {product.ProductCode} already exist";
             return View(product);
         }
         else
@@ -114,7 +121,7 @@ public class ProductController : Controller
         var person = _productRepository.SelectById(Id);
         if (person is null)
         {
-            TempData["ProductDoesNotExist"] = "Product does not exist";
+            TempData["Index"] = "Product does not exist";
             return RedirectToAction(nameof(Index));
         }
         return View(person);
@@ -128,7 +135,7 @@ public class ProductController : Controller
         _productRepository.Delete(product);
         _productRepository.Save();
 
-        TempData["ProductDeleted"] = "Product deleted";
+        TempData["Index"] = "Product deleted";
         return RedirectToAction(nameof(Index));
     }
 }

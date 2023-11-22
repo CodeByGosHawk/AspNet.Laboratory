@@ -25,14 +25,14 @@ public class PersonController : Controller
             return Problem("Entity set 'TrainingProjectDbContext.Person'  is null.");
         }
     }
-
+    
     public IActionResult Details(Guid id)
     {
         if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
         var person = _personRepository.SelectById(id);
         if (person is not null) return View(person);
-        TempData["UserNotFound"] = "User not found";
+        TempData["Index"] = "User not found";
         return RedirectToAction(nameof(Index));
     }
 
@@ -51,12 +51,12 @@ public class PersonController : Controller
         {
             _personRepository.Insert(person);
             _personRepository.Save();
-            TempData["NewPersonCreated"] = "New person created";
+            TempData["Index"] = "New person created";
             return RedirectToAction(nameof(Index));
         }
         else if (ModelState.IsValid && existingPerson is not null)
         {
-            TempData["PersonAlreadyExists"] = $"Person with NationalCode : {person.NationalCode} already exist";
+            TempData["Create"] = $"Person with NationalCode : {person.NationalCode} already exist";
             return View();
         }
         else
@@ -72,33 +72,37 @@ public class PersonController : Controller
         var person = _personRepository.SelectById(Id);
         if (person is null)
         {
-            TempData["PersonDoesNotExist"] = "Person does not exist";
+            TempData["Index"] = "Person does not exist";
             return RedirectToAction(nameof(Index));
         }
         return View(person);
     }
 
     [HttpPost]
-    public IActionResult Update(Person person)//, Guid Id) what is id ? 
+    [ValidateAntiForgeryToken]
+    public IActionResult Update(Person person)//, Guid Id) //what is id ? 
     {
         if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
         //if (Id != person.Id) return NotFound(); // Why ???????? 
         var existingPerson = _personRepository.SelectByNationalCode(person.NationalCode);
         bool updateCondition = (existingPerson is not null && existingPerson.Id == person.Id) ||
-                                existingPerson is null ?
-                                true : false;
+                                existingPerson is null;
 
         if (ModelState.IsValid && updateCondition)
         {
-            _personRepository.Update(person);
+            var updatedPerson = _personRepository.SelectById(person.Id);
+            updatedPerson.FirstName = person.FirstName;
+            updatedPerson.LastName = person.LastName;
+            updatedPerson.NationalCode = person.NationalCode;
+            _personRepository.Update(updatedPerson);
             _personRepository.Save();
-            TempData["UpdateSuccessful"] = "Update Successful";
+            TempData["Index"] = "Update Successful";
             return RedirectToAction(nameof(Index));
         }
         else if(ModelState.IsValid && !updateCondition)
         {
-            TempData["PersonAlreadyExists"] = $"Person with NationalCode : {person.NationalCode} already exist";
+            TempData["Update"] = $"Person with NationalCode : {person.NationalCode} already exist";
             return View(person);
         }
         else
@@ -114,7 +118,7 @@ public class PersonController : Controller
         var person = _personRepository.SelectById(Id);
         if (person is null)
         {
-            TempData["PersonDoesNotExist"] = "Person does not exist";
+            TempData["Index"] = "Person does not exist";
             return RedirectToAction(nameof(Index));
         }
         return View(person);
@@ -128,7 +132,7 @@ public class PersonController : Controller
         _personRepository.Delete(person);
         _personRepository.Save();
 
-        TempData["PersonDeleted"] = "Person deleted";
+        TempData["Index"] = "Person deleted";
         return RedirectToAction(nameof(Index));
     }
 }
