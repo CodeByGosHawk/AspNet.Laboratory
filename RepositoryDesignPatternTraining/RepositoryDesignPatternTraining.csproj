@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Controllers\DTOs\ProductDTOs\" />
     <Folder Include="Models\Services\Contracts\RepositoryFrameworks\" />
   </ItemGroup>
 

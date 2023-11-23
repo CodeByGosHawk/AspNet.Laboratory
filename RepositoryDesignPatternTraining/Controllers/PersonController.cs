@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RepositoryDesignPatternTraining.Controllers.DTOs.PersonDTOs;
 using RepositoryDesignPatternTraining.Models.DomainModels.PersonAggregates;
 using RepositoryDesignPatternTraining.Models.Services.Contracts;
 
@@ -18,7 +19,18 @@ public class PersonController : Controller
         if (_personRepository is not null)
         {
             var people = _personRepository.SelectAll();
-            return View(people);
+            IEnumerable<SelectDTO> peopleDTO = new List<SelectDTO>();
+
+            foreach (var person in people)
+            {
+                SelectDTO selectDTO = new SelectDTO();
+                selectDTO.FirstName = person.FirstName;
+                selectDTO.LastName = person.LastName;
+                selectDTO.NationalCode= person.NationalCode;
+                peopleDTO.Append(selectDTO);
+            }
+
+            return View(peopleDTO);
         }
         else
         {
@@ -31,7 +43,12 @@ public class PersonController : Controller
         if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
         var person = _personRepository.SelectById(id);
-        if (person is not null) return View(person);
+        var personDTO = new SelectDTO();
+        personDTO.FirstName = person.FirstName;
+        personDTO.LastName = person.LastName;
+        personDTO.NationalCode = person.NationalCode;
+
+        if (person is not null) return View(personDTO);
         TempData["Index"] = "User not found";
         return RedirectToAction(nameof(Index));
     }
@@ -42,14 +59,20 @@ public class PersonController : Controller
     }
 
     [HttpPost]
-    public IActionResult Create(Person person)
+    public IActionResult Create(CreateDTO person)
     {
         if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
         var existingPerson = _personRepository.SelectByNationalCode(person.NationalCode);
         if (ModelState.IsValid && existingPerson is null)
         {
-            _personRepository.Insert(person);
+            var createdPerson = new Person();
+            createdPerson.FirstName = person.FirstName;
+            createdPerson.LastName = person.LastName;
+            createdPerson.NationalCode = person.NationalCode;
+            createdPerson.Id = new Guid();
+
+            _personRepository.Insert(createdPerson);
             _personRepository.Save();
             TempData["Index"] = "New person created";
             return RedirectToAction(nameof(Index));
@@ -75,6 +98,10 @@ public class PersonController : Controller
             TempData["Index"] = "Person does not exist";
             return RedirectToAction(nameof(Index));
         }
+
+        var toUpdatePerson = new UpdateDTO();
+
+
         return View(person);
     }
 
