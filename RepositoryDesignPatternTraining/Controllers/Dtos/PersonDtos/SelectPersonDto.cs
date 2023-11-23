@@ -1,6 +1,6 @@
-﻿namespace RepositoryDesignPatternTraining.Controllers.DTOs.PersonDTOs;
+﻿namespace RepositoryDesignPatternTraining.Controllers.Dtos.PersonDtos;
 
-public class SelectAllDTO
+public class SelectPersonDto
 {
     public Guid Id { get; set; }
 

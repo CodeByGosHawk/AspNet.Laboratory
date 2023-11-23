@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace RepositoryDesignPatternTraining.Controllers.DTOs.PersonDTOs;
+namespace RepositoryDesignPatternTraining.Controllers.Dtos.PersonDtos;
 
-public class DeleteDTO
+public class DeletePersonDto
 {
     public Guid Id { get; set; }
 

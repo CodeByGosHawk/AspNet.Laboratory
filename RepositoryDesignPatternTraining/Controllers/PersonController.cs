@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using RepositoryDesignPatternTraining.Controllers.DTOs.PersonDTOs;
+using RepositoryDesignPatternTraining.Controllers.Dtos.PersonDtos;
 using RepositoryDesignPatternTraining.Models.DomainModels.PersonAggregates;
 using RepositoryDesignPatternTraining.Models.Services.Contracts;
 
@@ -19,36 +19,41 @@ public class PersonController : Controller
         if (_personRepository is not null)
         {
             var people = _personRepository.SelectAll();
-            IEnumerable<SelectDTO> peopleDTO = new List<SelectDTO>();
+            var selectPeopleDtos = new List<SelectPeopleDto>();
 
             foreach (var person in people)
             {
-                SelectDTO selectDTO = new SelectDTO();
-                selectDTO.FirstName = person.FirstName;
-                selectDTO.LastName = person.LastName;
-                selectDTO.NationalCode= person.NationalCode;
-                peopleDTO.Append(selectDTO);
+                SelectPeopleDto selectPeopleDto = new SelectPeopleDto()
+                {
+                    Id = person.Id,
+                    FirstName = person.FirstName,
+                    LastName = person.LastName
+                };
+                selectPeopleDtos.Add(selectPeopleDto);
             }
 
-            return View(peopleDTO);
+            return View(selectPeopleDtos);
         }
         else
         {
             return Problem("Entity set 'TrainingProjectDbContext.Person'  is null.");
         }
     }
-    
+
     public IActionResult Details(Guid id)
     {
         if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
         var person = _personRepository.SelectById(id);
-        var personDTO = new SelectDTO();
-        personDTO.FirstName = person.FirstName;
-        personDTO.LastName = person.LastName;
-        personDTO.NationalCode = person.NationalCode;
-
-        if (person is not null) return View(personDTO);
+        if (person is not null)
+        {
+            var selectPersonDto = new SelectPersonDto();
+            selectPersonDto.Id = person.Id;
+            selectPersonDto.FirstName = person.FirstName;
+            selectPersonDto.LastName = person.LastName;
+            selectPersonDto.NationalCode = person.NationalCode;
+            return View(selectPersonDto);
+        }
         TempData["Index"] = "User not found";
         return RedirectToAction(nameof(Index));
     }
@@ -59,17 +64,17 @@ public class PersonController : Controller
     }
 
     [HttpPost]
-    public IActionResult Create(CreateDTO person)
+    public IActionResult Create(CreatePersonDto createPersonDto)
     {
         if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var existingPerson = _personRepository.SelectByNationalCode(person.NationalCode);
+        var existingPerson = _personRepository.SelectByNationalCode(createPersonDto.NationalCode);
         if (ModelState.IsValid && existingPerson is null)
         {
             var createdPerson = new Person();
-            createdPerson.FirstName = person.FirstName;
-            createdPerson.LastName = person.LastName;
-            createdPerson.NationalCode = person.NationalCode;
+            createdPerson.FirstName = createPersonDto.FirstName;
+            createdPerson.LastName = createPersonDto.LastName;
+            createdPerson.NationalCode = createPersonDto.NationalCode;
             createdPerson.Id = new Guid();
 
             _personRepository.Insert(createdPerson);
@@ -79,7 +84,7 @@ public class PersonController : Controller
         }
         else if (ModelState.IsValid && existingPerson is not null)
         {
-            TempData["Create"] = $"Person with NationalCode : {person.NationalCode} already exist";
+            TempData["Create"] = $"Person with NationalCode : {createPersonDto.NationalCode} already exist";
             return View();
         }
         else
@@ -88,49 +93,53 @@ public class PersonController : Controller
         }
     }
 
-    public IActionResult Update(Guid Id)
+    public IActionResult Update(Guid id)
     {
         if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var person = _personRepository.SelectById(Id);
+        var person = _personRepository.SelectById(id);
         if (person is null)
         {
             TempData["Index"] = "Person does not exist";
             return RedirectToAction(nameof(Index));
         }
 
-        var toUpdatePerson = new UpdateDTO();
+        var updatePersonDto = new UpdatePersonDto();
+        updatePersonDto.Id = person.Id;
+        updatePersonDto.FirstName = person.FirstName;
+        updatePersonDto.LastName = person.LastName;
+        updatePersonDto.NationalCode = person.NationalCode;
 
-
-        return View(person);
+        return View(updatePersonDto);
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult Update(Person person)//, Guid Id) //what is id ? 
+    public IActionResult Update(UpdatePersonDto updatePersonDto)//, Guid Id) //what is id ? 
     {
+        //if (Id != person.Id) return NotFound(); // Why ????????
         if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        //if (Id != person.Id) return NotFound(); // Why ???????? 
-        var existingPerson = _personRepository.SelectByNationalCode(person.NationalCode);
-        bool updateCondition = (existingPerson is not null && existingPerson.Id == person.Id) ||
+        var existingPerson = _personRepository.SelectByNationalCode(updatePersonDto.NationalCode);
+        bool updateCondition = (existingPerson is not null && existingPerson.Id == updatePersonDto.Id) ||
                                 existingPerson is null;
 
         if (ModelState.IsValid && updateCondition)
         {
-            var updatedPerson = _personRepository.SelectById(person.Id);
-            updatedPerson.FirstName = person.FirstName;
-            updatedPerson.LastName = person.LastName;
-            updatedPerson.NationalCode = person.NationalCode;
+            var updatedPerson = _personRepository.SelectById(updatePersonDto.Id);
+
+            updatedPerson.FirstName = updatePersonDto.FirstName;
+            updatedPerson.LastName = updatePersonDto.LastName;
+            updatedPerson.NationalCode = updatePersonDto.NationalCode;
+
             _personRepository.Update(updatedPerson);
             _personRepository.Save();
             TempData["Index"] = "Update Successful";
             return RedirectToAction(nameof(Index));
         }
-        else if(ModelState.IsValid && !updateCondition)
+        else if (ModelState.IsValid && !updateCondition)
         {
-            TempData["Update"] = $"Person with NationalCode : {person.NationalCode} already exist";
-            return View(person);
+            TempData["Update"] = $"Person with NationalCode : {updatePersonDto.NationalCode} already exist";
+            return View(updatePersonDto);
         }
         else
         {
@@ -138,27 +147,36 @@ public class PersonController : Controller
         }
     }
 
-    public IActionResult Delete(Guid Id)
+    public IActionResult Delete(Guid id)
     {
         if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
-
-        var person = _personRepository.SelectById(Id);
+        Console.WriteLine(id);
+        var person = _personRepository.SelectById(id);
         if (person is null)
         {
             TempData["Index"] = "Person does not exist";
             return RedirectToAction(nameof(Index));
         }
-        return View(person);
+        var deletePersonDto = new DeletePersonDto // این اصن خیلی عجیبه ! شِت !!!0
+        {
+            Id = new Guid(),
+            FirstName = person.FirstName,
+            LastName = person.LastName,
+            NationalCode = person.NationalCode
+        };
+        // هر آیدی که میفرستی به ویو باز خودش آیدی که از ایندکس اومده رو پاس میده به ویو. 
+        return View(deletePersonDto);
     }
 
     [HttpPost]
-    public IActionResult Delete(Person person)
+    public IActionResult Delete(DeletePersonDto deletePersonDto)
     {
         if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        _personRepository.Delete(person);
-        _personRepository.Save();
+        var deletedPerson = _personRepository.SelectById(deletePersonDto.Id);
 
+        _personRepository.Delete(deletedPerson);
+        _personRepository.Save();
         TempData["Index"] = "Person deleted";
         return RedirectToAction(nameof(Index));
     }

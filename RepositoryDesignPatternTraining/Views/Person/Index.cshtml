@@ -1,5 +1,5 @@
-﻿@model IEnumerable<SelectDTO>
-@using RepositoryDesignPatternTraining.Controllers.DTOs.PersonDTOs;
+﻿@using RepositoryDesignPatternTraining.Controllers.Dtos.PersonDtos
+@model List<SelectPeopleDto>
 
 @{
     ViewData["Title"] = "Index";
@@ -22,9 +22,6 @@
             <th>
                 Last Name
             </th>
-            <th>
-                National Code
-            </th>
             <th></th>
         </tr>
     </thead>
@@ -36,9 +33,6 @@
             </td>
             <td>
                 @person.LastName
-            </td>
-            <td>
-                @person.NationalCode
             </td>
             <td>
                 <a asp-action="Update" asp-route-id="@person.Id">Edit</a> | 

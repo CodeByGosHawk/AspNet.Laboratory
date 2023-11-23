@@ -1,5 +1,5 @@
-﻿@model Person
-@using RepositoryDesignPatternTraining.Models.DomainModels.PersonAggregates
+﻿@using RepositoryDesignPatternTraining.Controllers.Dtos.PersonDtos
+@model UpdatePersonDto
 
 @{
     ViewData["Title"] = "Edit";
@@ -22,7 +22,7 @@
     <div class="col-md-4">
         <form asp-action="Update">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
+            @* <input type="hidden" asp-for="Id" /> *@
             <div class="form-group">
                 <label class="control-label">FirstName</label>
                 <input asp-for="FirstName" class="form-control" />
@@ -48,7 +48,3 @@
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
-
-@section Scripts {
-@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
