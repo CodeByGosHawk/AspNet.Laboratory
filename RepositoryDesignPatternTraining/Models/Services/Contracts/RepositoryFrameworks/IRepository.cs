@@ -2,12 +2,12 @@
 
 public interface IRepository<T> where T : class
 {
-    IEnumerable<T> SelectAll();
-    T SelectById(Guid Id);
-    bool Insert(T obj);
-    bool Update(T obj);
-    //string Update(Guid Id, string values);
-    bool Delete(Guid Id);
-    bool Delete(T obj);
-    void Save();
+    Task<IEnumerable<T>> SelectAll();
+    Task<T> SelectById(Guid Id);
+    Task<bool> Insert(T obj);
+    Task<bool> Update(T obj);
+    Task<bool> Delete(Guid Id);
+    Task<bool> Delete(T obj);
+    Task Save();
+    //Task<bool> Update(Guid Id, string values);
 }

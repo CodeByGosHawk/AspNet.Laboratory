@@ -2,6 +2,7 @@
 using RepositoryDesignPatternTraining.Models.DomainModels.PersonAggregates;
 using RepositoryDesignPatternTraining.Models.DomainModels.ProductAggregates;
 using RepositoryDesignPatternTraining.Models.Services.Contracts;
+using RepositoryDesignPatternTraining.Models.Services.Contracts.RepositoryFrameworks;
 using System.Net;
 
 namespace RepositoryDesignPatternTraining.Models.Services.Repositories;
@@ -16,13 +17,13 @@ public class PersonRepository : IPersonRepository
     }
 
     #region[Create]
-    public bool Insert(Person person)
+    public async Task<bool> Insert(Person person)
     {
         try
         {
             if (person is not null)
             {
-                _dbContext.Add(person);
+                await _dbContext.AddAsync(person);
                 return true;
             }
             else
@@ -39,11 +40,11 @@ public class PersonRepository : IPersonRepository
     #endregion
 
     #region[Read]
-    public IEnumerable<Person> SelectAll()
+    public async Task<IEnumerable<Person>> SelectAll()
     {
         try
         {
-            return _dbContext.Person;
+            return await _dbContext.Person.ToListAsync();
         }
         catch (Exception)
         {
@@ -51,11 +52,11 @@ public class PersonRepository : IPersonRepository
         }
     }
 
-    public Person SelectById(Guid Id)
+    public async Task<Person> SelectById(Guid Id)
     {
         try
         {
-            return _dbContext.Person.Find(Id);
+            return await _dbContext.Person.FindAsync(Id);
         }
         catch (Exception)
         {
@@ -63,11 +64,11 @@ public class PersonRepository : IPersonRepository
         }
     }
 
-    public Person SelectByNationalCode(string nationalCode)
+    public async Task<Person> SelectByNationalCode(string nationalCode)
     {
         try
         {
-            return _dbContext.Person.FirstOrDefault(p => p.NationalCode == nationalCode);
+            return await _dbContext.Person.FirstOrDefaultAsync(p => p.NationalCode == nationalCode);
         }
         catch (Exception)
         {
@@ -77,13 +78,13 @@ public class PersonRepository : IPersonRepository
     #endregion
 
     #region[Update]
-    public bool Update(Person person)
+    public async Task<bool> Update(Person person)
     {
         try
         {
             if (person is not null)
             {
-                _dbContext.Entry(person).State = EntityState.Modified;
+                _dbContext.Entry(person).State = EntityState.Modified; // Bottleneck ?
                 //_dbContext.Update(person);
                 return true;
             }
@@ -100,14 +101,14 @@ public class PersonRepository : IPersonRepository
     #endregion
 
     #region[Delete]
-    public bool Delete(Guid Id)
+    public async Task<bool> Delete(Guid Id)
     {
         try
         {
-            var deletedPerson = _dbContext.Person.Find(Id);
+            var deletedPerson = await _dbContext.Person.FindAsync(Id);
             if (deletedPerson is not null)
             {
-                _dbContext.Person.Remove(deletedPerson);
+                _dbContext.Person.Remove(deletedPerson); // Bottleneck ? 
                 return true;
             }
             else
@@ -121,13 +122,13 @@ public class PersonRepository : IPersonRepository
         }
     }
 
-    public bool Delete(Person person)
+    public async Task<bool> Delete(Person person)
     {
         try
         {
             if (person is not null)
             {
-                _dbContext.Person.Remove(person);
+                _dbContext.Person.Remove(person); // Bottleneck ?
                 return true;
             }
             else
@@ -143,11 +144,11 @@ public class PersonRepository : IPersonRepository
     #endregion
 
     #region[Save]
-    public void Save()
+    public async Task Save()
     {
         try
         {
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
         }
         catch (Exception)
         {

@@ -1,5 +1,5 @@
-﻿@model IEnumerable<Product>
-@using RepositoryDesignPatternTraining.Models.DomainModels.ProductAggregates
+﻿@using RepositoryDesignPatternTraining.Controllers.Dtos.ProductDtos
+@model IEnumerable<SelectProductsDto>
 
 @{
     ViewData["Title"] = "Index";
@@ -17,9 +17,6 @@
     <thead>
         <tr>
             <th>
-                ProductCode
-            </th>
-            <th>
                 Title
             </th>
             <th>
@@ -35,16 +32,13 @@
 @foreach (var product in Model) {
         <tr>
             <td>
-                @product.ProductCode
-            </td>
-            <td>
                 @product.Title
             </td>
             <td>
                 @product.Quantity
             </td>
             <td>
-                @product.ProductCode
+                @product.UnitPrice
             </td>
             <td>
                 <a asp-action="Update" asp-route-id="@product.Id">Edit</a> | 

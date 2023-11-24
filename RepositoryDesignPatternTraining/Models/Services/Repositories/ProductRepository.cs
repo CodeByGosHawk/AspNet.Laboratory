@@ -14,13 +14,13 @@ public class ProductRepository : IProductRepository
     }
 
     #region[Create]
-    public bool Insert(Product product)
+    public async Task<bool> Insert(Product product)
     {
         try
         {
             if (product is not null)
             {
-                _dbContext.Add(product);
+                await _dbContext.AddAsync(product);
                 return true;
             }
             else
@@ -37,11 +37,11 @@ public class ProductRepository : IProductRepository
     #endregion
 
     #region[Read]
-    public IEnumerable<Product> SelectAll()
+    public async Task<IEnumerable<Product>> SelectAll()
     {
         try
         {
-            return _dbContext.Product;
+            return await _dbContext.Product.ToListAsync();
         }
         catch (Exception)
         {
@@ -49,11 +49,11 @@ public class ProductRepository : IProductRepository
         }
     }
 
-    public Product SelectById(Guid Id)
+    public async Task<Product> SelectById(Guid Id)
     {
         try
         {
-            return _dbContext.Product.Find(Id);
+            return await _dbContext.Product.FindAsync(Id);
         }
         catch (Exception)
         {
@@ -61,11 +61,11 @@ public class ProductRepository : IProductRepository
         }
     }
 
-    public Product SelectByProductCode(string productCode)
+    public async Task<Product> SelectByProductCode(string productCode)
     {
         try
         {
-            return _dbContext.Product.FirstOrDefault(p => p.ProductCode == productCode);
+            return await _dbContext.Product.FirstOrDefaultAsync(p => p.ProductCode == productCode);
         }
         catch (Exception)
         {
@@ -75,13 +75,13 @@ public class ProductRepository : IProductRepository
     #endregion
 
     #region[Update]
-    public bool Update(Product product)
+    public async Task<bool> Update(Product product)
     {
         try
         {
             if(product is not null)
             {
-                _dbContext.Entry(product).State = EntityState.Modified;
+                _dbContext.Entry(product).State = EntityState.Modified; // Bottleneck ? 
                 return true;
             }
             else
@@ -97,11 +97,11 @@ public class ProductRepository : IProductRepository
     #endregion
 
     #region[Delete]
-    public bool Delete(Guid Id)
+    public async Task<bool> Delete(Guid Id)
     {
         try
         {
-            var deletedProduct = _dbContext.Product.Find(Id);
+            var deletedProduct = await _dbContext.Product.FindAsync(Id);
             if (deletedProduct is not null)
             {
                 _dbContext.Product.Remove(deletedProduct);
@@ -118,7 +118,7 @@ public class ProductRepository : IProductRepository
         }
     }
 
-    public bool Delete(Product product)
+    public async Task<bool> Delete(Product product)
     { 
         try
         {
@@ -136,15 +136,15 @@ public class ProductRepository : IProductRepository
         {
             throw;
         }
-    }
+    } // Bottleneck ?
     #endregion
 
     #region[Save]
-    public void Save()
+    public async Task Save()
     {
         try
         {
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
         }
         catch (Exception)
         {

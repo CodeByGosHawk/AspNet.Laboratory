@@ -1,5 +1,5 @@
-﻿@model Product
-@using RepositoryDesignPatternTraining.Models.DomainModels.ProductAggregates
+﻿@using RepositoryDesignPatternTraining.Controllers.Dtos.ProductDtos
+@model DeleteProductDto
 
 @{
     ViewData["Title"] = "Delete";
@@ -15,9 +15,9 @@
         <dt class="col-sm-2">
             ProductCode
         </dt>
-        <dt class="col-sm-2">
+        <dd class="col-sm-10">
             @Model.ProductCode
-        </dt>
+        </dd>
         <dt class="col-sm-2">
             Title
         </dt>
