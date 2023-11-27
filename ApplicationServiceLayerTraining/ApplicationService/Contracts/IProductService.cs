@@ -6,4 +6,5 @@ namespace ApplicationServiceLayerTraining.ApplicationService.Contracts;
 
 public interface IProductService : IService<Product,ServiceCreateProductDto,ServiceSelectProductDto,ServiceUpdateProductDto,ServiceDeleteProductDto>
 {
+    Task<ServiceSelectProductDto> SelectByProductCodeAsync(string productCode);
 }

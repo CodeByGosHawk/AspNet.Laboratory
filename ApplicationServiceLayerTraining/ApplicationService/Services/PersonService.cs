@@ -1,5 +1,6 @@
 ﻿using ApplicationServiceLayerTraining.ApplicationService.Contracts;
 using ApplicationServiceLayerTraining.ApplicationService.Dtos.PersonDtos;
+using ApplicationServiceLayerTraining.Models.DomainModels.PersonAggregates;
 using ApplicationServiceLayerTraining.Models.Services.Contracts;
 
 namespace ApplicationServiceLayerTraining.ApplicationService.Services;
@@ -13,38 +14,109 @@ public class PersonService : IPersonService
         _personRepository = personRepository;
     }
 
-    public Task<bool> DeleteAsync(ServiceDeletePersonDto obj)
+    #region[Create]
+
+    public async Task<bool> InsertAsync(ServiceCreatePersonDto createPersonDto)
     {
-        throw new NotImplementedException();
+        var createdPerson = new Person()
+        {
+            Id = new Guid(),
+            FirstName = createPersonDto.FirstName,
+            LastName = createPersonDto.LastName,
+            NationalCode = createPersonDto.NationalCode
+        };
+
+        bool result = await _personRepository.Insert(createdPerson);
+        return result;
     }
 
-    public Task<bool> DeleteByIdAsync(Guid Id)
+    #endregion
+
+    #region[Read]
+
+    public async Task<IEnumerable<ServiceSelectPersonDto>> SelectAllAsync()
     {
-        throw new NotImplementedException();
+        List<ServiceSelectPersonDto> peopleDto = new List<ServiceSelectPersonDto>();
+        var people = await _personRepository.SelectAll();
+        foreach (var person in people)
+        {
+            var personDto = new ServiceSelectPersonDto()
+            {
+                Id = person.Id,
+                FirstName = person.FirstName,
+                LastName = person.LastName,
+                NationalCode = person.NationalCode
+            };
+            peopleDto.Add(personDto);
+        }
+        return peopleDto;
     }
 
-    public Task<bool> InsertAsync(ServiceCreatePersonDto obj)
+    public async Task<ServiceSelectPersonDto> SelectByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var selectedPerson = await _personRepository.SelectById(Id);
+        var selectedPersonDto = new ServiceSelectPersonDto()
+        {
+            Id = selectedPerson.Id,
+            FirstName = selectedPerson.FirstName,
+            LastName = selectedPerson.LastName,
+            NationalCode = selectedPerson.NationalCode
+        };
+        return selectedPersonDto;
     }
 
-    public Task SaveAsync()
+    public async Task<ServiceSelectPersonDto> SelectByNationalCodeAsync(string nationalCode)
     {
-        throw new NotImplementedException();
+        var selectedPerson = await _personRepository.SelectByNationalCode(nationalCode);
+        var selectedPersonDto = new ServiceSelectPersonDto()
+        {
+            Id = selectedPerson.Id,
+            FirstName = selectedPerson.FirstName,
+            LastName = selectedPerson.LastName,
+            NationalCode = selectedPerson.NationalCode
+        };
+        return selectedPersonDto;
     }
 
-    public Task<IEnumerable<ServiceSelectPersonDto>> SelectAllAsync()
+    #endregion
+
+    #region[Update]
+
+    public async Task<bool> UpdateAsync(ServiceUpdatePersonDto updatePersonDto)
     {
-        throw new NotImplementedException();
+        var updatedPerson = await _personRepository.SelectById(updatePersonDto.Id);
+        updatedPerson.FirstName = updatePersonDto.FirstName;
+        updatedPerson.LastName = updatePersonDto.LastName;
+        updatedPerson.NationalCode = updatePersonDto.NationalCode;
+        var result = await _personRepository.Update(updatedPerson);
+        return result;
     }
 
-    public Task<ServiceSelectPersonDto> SelectByIdAsync(Guid Id)
+    #endregion
+
+    #region[Delete]
+
+    public async Task<bool> DeleteAsync(ServiceDeletePersonDto deletePersonDto)
     {
-        throw new NotImplementedException();
+        var deletedPerson = await _personRepository.SelectById(deletePersonDto.Id);
+        var result = await _personRepository.Delete(deletedPerson);
+        return result;
     }
 
-    public Task<bool> UpdateAsync(ServiceUpdatePersonDto obj)
+    public async Task<bool> DeleteByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var result = await _personRepository.Delete(Id);
+        return result;
     }
+
+    #endregion
+
+    #region[Save]
+
+    public async Task SaveAsync()
+    {
+        await _personRepository.Save();
+    }
+
+    #endregion
 }

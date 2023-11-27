@@ -4,8 +4,6 @@ namespace ApplicationServiceLayerTraining.Controllers.Dtos.PersonDtos;
 
 public class CreatePersonDto
 {
-    public Guid Id { get; set; }
-
     [Required(ErrorMessage = "Enter FirstName")]
     public string FirstName { get; set; }
 

@@ -1,24 +1,24 @@
-﻿using ApplicationServiceLayerTraining.Controllers.Dtos.PersonDtos;
-using ApplicationServiceLayerTraining.Models.DomainModels.PersonAggregates;
-using ApplicationServiceLayerTraining.Models.Services.Contracts;
+﻿using ApplicationServiceLayerTraining.ApplicationService.Contracts;
+using ApplicationServiceLayerTraining.ApplicationService.Dtos.PersonDtos;
+using ApplicationServiceLayerTraining.Controllers.Dtos.PersonDtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApplicationServiceLayerTraining.Controllers;
 
 public class PersonController : Controller
 {
-    private readonly IPersonRepository _personRepository;
+    private readonly IPersonService _personService;
 
-    public PersonController(IPersonRepository personRepository)
+    public PersonController(IPersonService personService)
     {
-        _personRepository = personRepository;
+        _personService = personService;
     }
 
     public async Task<IActionResult> Index()
     {
-        if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
+        if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var people = await _personRepository.SelectAll();
+        var people = await _personService.SelectAllAsync();
         var selectPeopleDtos = new List<SelectPeopleDto>();
 
         foreach (var person in people)
@@ -37,9 +37,9 @@ public class PersonController : Controller
 
     public async Task<IActionResult> Details(Guid id)
     {
-        if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
+        if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var person = await _personRepository.SelectById(id);
+        var person = await _personService.SelectByIdAsync(id);
         if (person is not null)
         {
             var selectPersonDto = new SelectPersonDto
@@ -63,22 +63,21 @@ public class PersonController : Controller
     [HttpPost]
     public async Task<IActionResult> Create(CreatePersonDto createPersonDto)
     {
-        if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
+        if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var existingPerson = await _personRepository.SelectByNationalCode(createPersonDto.NationalCode);
+        var existingPerson = await _personService.SelectByNationalCodeAsync(createPersonDto.NationalCode);
         if (ModelState.IsValid && existingPerson is null)
         {
-            var createdPerson = new Person
+            var serviceCreatePersonDto = new ServiceCreatePersonDto    /// Unreadable !!!
             {
                 FirstName = createPersonDto.FirstName,
                 LastName = createPersonDto.LastName,
                 NationalCode = createPersonDto.NationalCode,
-                Id = new Guid()
             };
 
-            await _personRepository.Insert(createdPerson);
-            await _personRepository.Save();
-            TempData["Index"] = $"Person \"{createdPerson.FirstName} {createdPerson.LastName}\" created";
+            await _personService.InsertAsync(serviceCreatePersonDto);
+            await _personService.SaveAsync();
+            TempData["Index"] = $"Person \"{serviceCreatePersonDto.FirstName} {serviceCreatePersonDto.LastName}\" created";
             return RedirectToAction(nameof(Index));
         }
         else if (ModelState.IsValid && existingPerson is not null)
@@ -94,9 +93,9 @@ public class PersonController : Controller
 
     public async Task<IActionResult> Update(Guid id)
     {
-        if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
+        if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var person = await _personRepository.SelectById(id);
+        var person = await _personService.SelectByIdAsync(id);
         if (person is null)
         {
             TempData["Index"] = "Person does not exist";
@@ -118,22 +117,26 @@ public class PersonController : Controller
     public async Task<IActionResult> Update(UpdatePersonDto updatePersonDto)//, Guid Id) //what is id ? 
     {
         //if (Id != person.Id) return NotFound(); // Why ????????
-        if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
+        if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var existingPerson = await _personRepository.SelectByNationalCode(updatePersonDto.NationalCode);
+        var existingPerson = await _personService.SelectByNationalCodeAsync(updatePersonDto.NationalCode);
         bool updateCondition = (existingPerson is not null && existingPerson.Id == updatePersonDto.Id) ||
                                 existingPerson is null;
 
         if (ModelState.IsValid && updateCondition)
         {
-            var updatedPerson = await _personRepository.SelectById(updatePersonDto.Id);
+            var updatedPerson = await _personService.SelectByIdAsync(updatePersonDto.Id);
 
-            updatedPerson.FirstName = updatePersonDto.FirstName;
-            updatedPerson.LastName = updatePersonDto.LastName;
-            updatedPerson.NationalCode = updatePersonDto.NationalCode;
+            var serviceUpdatePersonDto = new ServiceUpdatePersonDto  /// Unreadable !!!!!
+            {
+                Id = updatePersonDto.Id,
+                FirstName = updatePersonDto.FirstName,
+                LastName = updatePersonDto.LastName,
+                NationalCode = updatePersonDto.NationalCode,
+            };
 
-            await _personRepository.Update(updatedPerson);
-            await _personRepository.Save();
+            await _personService.UpdateAsync(serviceUpdatePersonDto);
+            await _personService.SaveAsync();
             TempData["Index"] = $"Person \"{updatedPerson.FirstName} {updatedPerson.LastName}\" updated";
             return RedirectToAction(nameof(Index));
         }
@@ -150,9 +153,9 @@ public class PersonController : Controller
 
     public async Task<IActionResult> Delete(Guid id)
     {
-        if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
+        if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
         Console.WriteLine(id);
-        var person = await _personRepository.SelectById(id);
+        var person = await _personService.SelectByIdAsync(id);
         if (person is null)
         {
             TempData["Index"] = "Person does not exist";
@@ -172,12 +175,11 @@ public class PersonController : Controller
     [HttpPost]
     public async Task<IActionResult> Delete(DeletePersonDto deletePersonDto)
     {
-        if (_personRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
+        if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var deletedPerson = await _personRepository.SelectById(deletePersonDto.Id);
-
-        await _personRepository.Delete(deletedPerson);
-        await _personRepository.Save();
+        var deletedPerson = await _personService.SelectByIdAsync(deletePersonDto.Id);
+        await _personService.DeleteByIdAsync(deletePersonDto.Id);
+        await _personService.SaveAsync();
         TempData["Index"] = $"Person \"{deletedPerson.FirstName} {deletedPerson.LastName}\" deleted";
         return RedirectToAction(nameof(Index));
     }
