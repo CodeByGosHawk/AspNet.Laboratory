@@ -1,24 +1,24 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ApplicationServiceLayerTraining.ApplicationService.Contracts;
+using ApplicationServiceLayerTraining.ApplicationService.Dtos.ProductDtos;
 using ApplicationServiceLayerTraining.Controllers.Dtos.ProductDtos;
-using ApplicationServiceLayerTraining.Models.DomainModels.ProductAggregates;
-using ApplicationServiceLayerTraining.Models.Services.Contracts;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ApplicationServiceLayerTraining.Controllers;
 
 public class ProductController : Controller
 {
-    private readonly IProductRepository _productRepository;
+    private readonly IProductService _productService;
 
-    public ProductController(IProductRepository productRepository)
+    public ProductController(IProductService productService)
     {
-        _productRepository = productRepository;
+        _productService = productService;
     }
 
     public async Task<IActionResult> Index()
     {
-        if (_productRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
+        if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var products = await _productRepository.SelectAll();
+        var products = await _productService.SelectAllAsync();
 
         var selectProductsDtos = new List<SelectProductsDto>();
 
@@ -39,9 +39,9 @@ public class ProductController : Controller
 
     public async Task<IActionResult> Details(Guid id)
     {
-        if (_productRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
+        if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var product = await _productRepository.SelectById(id);
+        var product = await _productService.SelectByIdAsync(id);
         if (product is not null)
         {
             var selectProductDto = new SelectProductDto
@@ -65,30 +65,29 @@ public class ProductController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(Product product)
+    public async Task<IActionResult> Create(ServiceCreateProductDto createProductDto)
     {
-        if (_productRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
+        if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var existingProduct = await _productRepository.SelectByProductCode(product.ProductCode);
+        var existingProduct = await _productService.SelectByProductCodeAsync(createProductDto.ProductCode);
         if (ModelState.IsValid && existingProduct is null)
         {
-            var createdProduct = new Product
+            var serviceCreateProductDto = new ServiceCreateProductDto  /// Unreadable !!!
             {
-                Id = new Guid(),
-                Title = product.Title,
-                ProductCode = product.ProductCode,
-                Quantity = product.Quantity,
-                UnitPrice = product.UnitPrice
+                Title = createProductDto.Title,
+                ProductCode = createProductDto.ProductCode,
+                Quantity = createProductDto.Quantity,
+                UnitPrice = createProductDto.UnitPrice
             };
 
-            await _productRepository.Insert(createdProduct);
-            await _productRepository.Save();
-            TempData["Index"] = $"Product \"{createdProduct.Title}\" created";
+            await _productService.InsertAsync(serviceCreateProductDto);
+            await _productService.SaveAsync();
+            TempData["Index"] = $"Product \"{serviceCreateProductDto.Title}\" created";
             return RedirectToAction(nameof(Index));
         }
         else if (ModelState.IsValid && existingProduct is not null)
         {
-            TempData["Create"] = $"Product with ProductCode : {product.ProductCode} already exist";
+            TempData["Create"] = $"Product with ProductCode : {createProductDto.ProductCode} already exist";
             return View();
         }
         else
@@ -99,9 +98,9 @@ public class ProductController : Controller
 
     public async Task<IActionResult> Update(Guid Id)
     {
-        if (_productRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
+        if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var product = await _productRepository.SelectById(Id);
+        var product = await _productService.SelectByIdAsync(Id);
         if (product is null)
         {
             TempData["Index"] = "Product does not exist";
@@ -123,25 +122,29 @@ public class ProductController : Controller
     [HttpPost]
     public async Task<IActionResult> Update(UpdateProductDto updateProductDto)//, Guid Id) what is id ? 
     {
-        if (_productRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
+        if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
         //if (Id != Product.Id) return NotFound(); // Why ???????? 
-        var existingProduct = await _productRepository.SelectByProductCode(updateProductDto.ProductCode);
+        var existingProduct = await _productService.SelectByProductCodeAsync(updateProductDto.ProductCode);
+
         bool updateCondition = (existingProduct is not null && existingProduct.Id == updateProductDto.Id) ||
-                                existingProduct is null ?
-        true : false;
+                                existingProduct is null;
 
         if (ModelState.IsValid && updateCondition)
         {
-            var updatedProduct = await _productRepository.SelectById(updateProductDto.Id);
+            var updatedProduct = await _productService.SelectByIdAsync(updateProductDto.Id);
 
-            updatedProduct.Title = updateProductDto.Title;
-            updatedProduct.Quantity = updateProductDto.Quantity;
-            updatedProduct.UnitPrice = updateProductDto.UnitPrice;
-            updatedProduct.ProductCode = updateProductDto.ProductCode;
+            var serviceUpdateProductDto = new ServiceUpdateProductDto  /// Unreadable !!!
+            {
+                Id = updateProductDto.Id,
+                Title = updateProductDto.Title,
+                Quantity = updateProductDto.Quantity,
+                UnitPrice = updateProductDto.UnitPrice,
+                ProductCode = updateProductDto.ProductCode,
+            };
 
-            await _productRepository.Update(updatedProduct);
-            await _productRepository.Save();
+            await _productService.UpdateAsync(serviceUpdateProductDto);
+            await _productService.SaveAsync();
             TempData["Index"] = $"Product \"{updatedProduct.Title}\" successfully updated";
             return RedirectToAction(nameof(Index));
         }
@@ -158,9 +161,9 @@ public class ProductController : Controller
 
     public async Task<IActionResult> Delete(Guid Id)
     {
-        if (_productRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
+        if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var product = await _productRepository.SelectById(Id);
+        var product = await _productService.SelectByIdAsync(Id);
         if (product is null)
         {
             TempData["Index"] = "Product does not exist";
@@ -181,12 +184,12 @@ public class ProductController : Controller
     [HttpPost]
     public async Task<IActionResult> Delete(DeleteProductDto deleteProductDto)
     {
-        if (_productRepository is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
+        if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var deletedProduct = await _productRepository.SelectById(deleteProductDto.Id);
+        var deletedProduct = await _productService.SelectByIdAsync(deleteProductDto.Id);
 
-        await _productRepository.Delete(deletedProduct);
-        await _productRepository.Save();
+        await _productService.DeleteByIdAsync(deleteProductDto.Id);
+        await _productService.SaveAsync();
 
         TempData["Index"] = $"Product \"{deletedProduct.Title}\" deleted";
         return RedirectToAction(nameof(Index));

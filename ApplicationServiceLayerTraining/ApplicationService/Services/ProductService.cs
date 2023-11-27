@@ -1,5 +1,6 @@
 ﻿using ApplicationServiceLayerTraining.ApplicationService.Contracts;
 using ApplicationServiceLayerTraining.ApplicationService.Dtos.ProductDtos;
+using ApplicationServiceLayerTraining.Models.DomainModels.ProductAggregates;
 using ApplicationServiceLayerTraining.Models.Services.Contracts;
 
 namespace ApplicationServiceLayerTraining.ApplicationService.Services;
@@ -13,38 +14,113 @@ public class ProductService : IProductService
         _productRepository = productRepository;
     }
 
-    public Task<bool> DeleteAsync(ServiceDeleteProductDto obj)
+    #region[Create]
+
+    public async Task<bool> InsertAsync(ServiceCreateProductDto createProductDto)
     {
-        throw new NotImplementedException();
+        var createdProduct = new Product()
+        {
+            Id = new Guid(),
+            ProductCode = createProductDto.ProductCode,
+            Title = createProductDto.Title,
+            Quantity = createProductDto.Quantity,
+            UnitPrice = createProductDto.UnitPrice
+        };
+        bool result = await _productRepository.Insert(createdProduct);
+        return result;
     }
 
-    public Task<bool> DeleteByIdAsync(Guid Id)
+    #endregion
+
+    #region[Read]
+
+    public async Task<IEnumerable<ServiceSelectProductDto>> SelectAllAsync()
     {
-        throw new NotImplementedException();
+        List<ServiceSelectProductDto> productsDto = new List<ServiceSelectProductDto>();
+        var products = await _productRepository.SelectAll();
+        foreach (var product in products)
+        {
+            var productDto = new ServiceSelectProductDto()
+            {
+                Id = product.Id,
+                ProductCode = product.ProductCode,
+                Title = product.Title,
+                Quantity = product.Quantity,
+                UnitPrice = product.UnitPrice
+            };
+            productsDto.Add(productDto);
+        }
+        return productsDto;
     }
 
-    public Task<bool> InsertAsync(ServiceCreateProductDto obj)
+    public async Task<ServiceSelectProductDto> SelectByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var selectedProduct = await _productRepository.SelectById(Id);
+        var selectedProductDto = new ServiceSelectProductDto()
+        {
+            Id = selectedProduct.Id,
+            ProductCode = selectedProduct.ProductCode,
+            Title = selectedProduct.Title,
+            Quantity = selectedProduct.Quantity,
+            UnitPrice = selectedProduct.UnitPrice
+        };
+        return selectedProductDto;
     }
 
-    public Task SaveAsync()
+    public async Task<ServiceSelectProductDto> SelectByProductCodeAsync(string productCode)
     {
-        throw new NotImplementedException();
+        var selectedProduct = await _productRepository.SelectByProductCode(productCode);
+        var selectedProductDto = new ServiceSelectProductDto()
+        {
+            Id = selectedProduct.Id,
+            ProductCode = selectedProduct.ProductCode,
+            Title = selectedProduct.Title,
+            Quantity = selectedProduct.Quantity,
+            UnitPrice = selectedProduct.UnitPrice
+        };
+        return selectedProductDto;
     }
 
-    public Task<IEnumerable<ServiceSelectProductDto>> SelectAllAsync()
+    #endregion
+
+    #region[Update]
+
+    public async Task<bool> UpdateAsync(ServiceUpdateProductDto updateProductDto)
     {
-        throw new NotImplementedException();
+        var updatedProduct = await _productRepository.SelectById(updateProductDto.Id);
+        updatedProduct.ProductCode = updateProductDto.ProductCode;
+        updatedProduct.Title = updateProductDto.Title;
+        updatedProduct.Quantity = updateProductDto.Quantity;
+        updatedProduct.UnitPrice = updateProductDto.UnitPrice;
+        var result = await _productRepository.Update(updatedProduct);
+        return result;
     }
 
-    public Task<ServiceSelectProductDto> SelectByIdAsync(Guid Id)
+    #endregion
+
+    #region[Delete]
+
+    public async Task<bool> DeleteAsync(ServiceDeleteProductDto deleteProductDto)
     {
-        throw new NotImplementedException();
+        var deletedProduct = await _productRepository.SelectById(deleteProductDto.Id);
+        var result = await _productRepository.Delete(deletedProduct);
+        return result;
     }
 
-    public Task<bool> UpdateAsync(ServiceUpdateProductDto obj)
+    public async Task<bool> DeleteByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var result = await _productRepository.Delete(Id);
+        return result;
     }
+
+    #endregion
+
+    #region[Save]
+
+    public async Task SaveAsync()
+    {
+        await _productRepository.Save();
+    }
+
+    #endregion
 }

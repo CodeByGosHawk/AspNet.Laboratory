@@ -4,8 +4,6 @@ namespace ApplicationServiceLayerTraining.Controllers.Dtos.ProductDtos;
 
 public class CreateProductDto
 {
-    public Guid Id { get; set; }
-
     [Required(ErrorMessage = "Enter ProductCode")]
     public string ProductCode { get; set; }
 
