@@ -8,7 +8,7 @@ public class ProductRepository : IProductRepository
 {
     private readonly OnlineShopDbContext _dbContext;
 
-    public ProductRepository(OnlineShopDbContext dbContext)
+    public ProductRepository(OnlineShopDbContext dbContext) // Primary Constructor Suggest ?!
     {
         _dbContext = dbContext;
     }
@@ -49,11 +49,11 @@ public class ProductRepository : IProductRepository
         }
     }
 
-    public async Task<Product> SelectById(Guid Id)
+    public async Task<Product> SelectById(Guid id)
     {
         try
         {
-            return await _dbContext.Product.FindAsync(Id);
+            return await _dbContext.Product.FindAsync(id);
         }
         catch (Exception)
         {
@@ -97,11 +97,11 @@ public class ProductRepository : IProductRepository
     #endregion
 
     #region[Delete]
-    public async Task<bool> Delete(Guid Id)
+    public async Task<bool> Delete(Guid id)
     {
         try
         {
-            var deletedProduct = await _dbContext.Product.FindAsync(Id);
+            var deletedProduct = await _dbContext.Product.FindAsync(id);
             if (deletedProduct is not null)
             {
                 _dbContext.Product.Remove(deletedProduct);

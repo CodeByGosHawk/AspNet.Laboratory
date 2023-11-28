@@ -18,6 +18,8 @@ public class PersonService : IPersonService
 
     public async Task<bool> InsertAsync(ServiceCreatePersonDto createPersonDto)
     {
+        if (createPersonDto is null) return false;
+
         var createdPerson = new Person()
         {
             Id = new Guid(),
@@ -34,10 +36,12 @@ public class PersonService : IPersonService
 
     #region[Read]
 
-    public async Task<IEnumerable<ServiceSelectPersonDto>> SelectAllAsync()
+    public async Task<IEnumerable<ServiceSelectPersonDto>?> SelectAllAsync()
     {
         List<ServiceSelectPersonDto> peopleDto = new List<ServiceSelectPersonDto>();
         var people = await _personRepository.SelectAll();
+        if (people is null) return null;
+
         foreach (var person in people)
         {
             var personDto = new ServiceSelectPersonDto()
@@ -52,9 +56,11 @@ public class PersonService : IPersonService
         return peopleDto;
     }
 
-    public async Task<ServiceSelectPersonDto> SelectByIdAsync(Guid id)
+    public async Task<ServiceSelectPersonDto?> SelectByIdAsync(Guid id)
     {
-        var selectedPerson = await _personRepository.SelectById(Id);
+        var selectedPerson = await _personRepository.SelectById(id);
+        if (selectedPerson is null) return null;
+
         var selectedPersonDto = new ServiceSelectPersonDto()
         {
             Id = selectedPerson.Id,
@@ -65,9 +71,11 @@ public class PersonService : IPersonService
         return selectedPersonDto;
     }
 
-    public async Task<ServiceSelectPersonDto> SelectByNationalCodeAsync(string nationalCode)
+    public async Task<ServiceSelectPersonDto?> SelectByNationalCodeAsync(string nationalCode)
     {
         var selectedPerson = await _personRepository.SelectByNationalCode(nationalCode);
+        if (selectedPerson is null) return null;
+
         var selectedPersonDto = new ServiceSelectPersonDto()
         {
             Id = selectedPerson.Id,
@@ -85,6 +93,8 @@ public class PersonService : IPersonService
     public async Task<bool> UpdateAsync(ServiceUpdatePersonDto updatePersonDto)
     {
         var updatedPerson = await _personRepository.SelectById(updatePersonDto.Id);
+        if (updatedPerson is null) return false;
+
         updatedPerson.FirstName = updatePersonDto.FirstName;
         updatedPerson.LastName = updatePersonDto.LastName;
         updatedPerson.NationalCode = updatePersonDto.NationalCode;
@@ -99,13 +109,15 @@ public class PersonService : IPersonService
     public async Task<bool> DeleteAsync(ServiceDeletePersonDto deletePersonDto)
     {
         var deletedPerson = await _personRepository.SelectById(deletePersonDto.Id);
+        if (deletedPerson is null) return false;
+
         var result = await _personRepository.Delete(deletedPerson);
         return result;
     }
 
     public async Task<bool> DeleteByIdAsync(Guid id)
     {
-        var result = await _personRepository.Delete(Id);
+        var result = await _personRepository.Delete(id);
         return result;
     }
 

@@ -6,5 +6,5 @@ namespace ApplicationServiceLayerTraining.ApplicationService.Contracts;
 
 public interface IPersonService : IService<Person,ServiceCreatePersonDto,ServiceSelectPersonDto,ServiceUpdatePersonDto,ServiceDeletePersonDto>
 {
-    Task<ServiceSelectPersonDto> SelectByNationalCodeAsync(string nationalCode);
+    Task<ServiceSelectPersonDto?> SelectByNationalCodeAsync(string nationalCode);
 }

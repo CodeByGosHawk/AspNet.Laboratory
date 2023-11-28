@@ -18,6 +18,8 @@ public class ProductService : IProductService
 
     public async Task<bool> InsertAsync(ServiceCreateProductDto createProductDto)
     {
+        if (createProductDto is null) return false;
+
         var createdProduct = new Product()
         {
             Id = new Guid(),
@@ -34,10 +36,12 @@ public class ProductService : IProductService
 
     #region[Read]
 
-    public async Task<IEnumerable<ServiceSelectProductDto>> SelectAllAsync()
+    public async Task<IEnumerable<ServiceSelectProductDto>?> SelectAllAsync()
     {
         List<ServiceSelectProductDto> productsDto = new List<ServiceSelectProductDto>();
         var products = await _productRepository.SelectAll();
+        if (products is null) return null;
+
         foreach (var product in products)
         {
             var productDto = new ServiceSelectProductDto()
@@ -53,9 +57,11 @@ public class ProductService : IProductService
         return productsDto;
     }
 
-    public async Task<ServiceSelectProductDto> SelectByIdAsync(Guid id)
+    public async Task<ServiceSelectProductDto?> SelectByIdAsync(Guid id)
     {
-        var selectedProduct = await _productRepository.SelectById(Id);
+        var selectedProduct = await _productRepository.SelectById(id);
+        if (selectedProduct is null) return null;
+
         var selectedProductDto = new ServiceSelectProductDto()
         {
             Id = selectedProduct.Id,
@@ -67,9 +73,10 @@ public class ProductService : IProductService
         return selectedProductDto;
     }
 
-    public async Task<ServiceSelectProductDto> SelectByProductCodeAsync(string productCode)
+    public async Task<ServiceSelectProductDto?> SelectByProductCodeAsync(string productCode)
     {
         var selectedProduct = await _productRepository.SelectByProductCode(productCode);
+        if (selectedProduct is null) return null;
         var selectedProductDto = new ServiceSelectProductDto()
         {
             Id = selectedProduct.Id,
@@ -88,6 +95,8 @@ public class ProductService : IProductService
     public async Task<bool> UpdateAsync(ServiceUpdateProductDto updateProductDto)
     {
         var updatedProduct = await _productRepository.SelectById(updateProductDto.Id);
+        if (updatedProduct is null) return false;
+
         updatedProduct.ProductCode = updateProductDto.ProductCode;
         updatedProduct.Title = updateProductDto.Title;
         updatedProduct.Quantity = updateProductDto.Quantity;
@@ -103,13 +112,15 @@ public class ProductService : IProductService
     public async Task<bool> DeleteAsync(ServiceDeleteProductDto deleteProductDto)
     {
         var deletedProduct = await _productRepository.SelectById(deleteProductDto.Id);
+        if (deletedProduct is null) return false;
+
         var result = await _productRepository.Delete(deletedProduct);
         return result;
     }
 
     public async Task<bool> DeleteByIdAsync(Guid id)
     {
-        var result = await _productRepository.Delete(Id);
+        var result = await _productRepository.Delete(id);
         return result;
     }
 
