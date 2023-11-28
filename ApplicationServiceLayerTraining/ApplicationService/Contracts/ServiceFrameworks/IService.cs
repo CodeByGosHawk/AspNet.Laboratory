@@ -2,8 +2,8 @@
 
 public interface IService<T,TCreate,TRead,TUpdate,TDelete>
 {
-    Task<IEnumerable<TRead>> SelectAllAsync();
-    Task<TRead> SelectByIdAsync(Guid Id);
+    Task<IEnumerable<TRead>?> SelectAllAsync();
+    Task<TRead?> SelectByIdAsync(Guid Id);
     Task<bool> InsertAsync(TCreate obj);
     Task<bool> UpdateAsync(TUpdate obj);
     Task<bool> DeleteByIdAsync(Guid Id);

@@ -49,11 +49,11 @@ public class PersonRepository : IPersonRepository
         }
     }
 
-    public async Task<Person> SelectById(Guid Id)
+    public async Task<Person> SelectById(Guid id)
     {
         try
         {
-            return await _dbContext.Person.FindAsync(Id);
+            return await _dbContext.Person.FindAsync(id);
         }
         catch (Exception)
         {
@@ -98,11 +98,11 @@ public class PersonRepository : IPersonRepository
     #endregion
 
     #region[Delete]
-    public async Task<bool> Delete(Guid Id)
+    public async Task<bool> Delete(Guid id)
     {
         try
         {
-            var deletedPerson = await _dbContext.Person.FindAsync(Id);
+            var deletedPerson = await _dbContext.Person.FindAsync(id);
             if (deletedPerson is not null)
             {
                 _dbContext.Person.Remove(deletedPerson); // Bottleneck ? 
