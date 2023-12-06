@@ -28,8 +28,8 @@ public class PersonService : IPersonService
             NationalCode = createPersonDto.NationalCode
         };
 
-        bool result = await _personRepository.Insert(createdPerson);
-        return result;
+        var insertOperationResponse = await _personRepository.Insert(createdPerson);
+        return insertOperationResponse.IsSuccessful;
     }
 
     #endregion
@@ -39,10 +39,10 @@ public class PersonService : IPersonService
     public async Task<IEnumerable<ServiceSelectPersonDto>?> SelectAllAsync()
     {
         List<ServiceSelectPersonDto> peopleDto = new List<ServiceSelectPersonDto>();
-        var people = await _personRepository.SelectAll();
-        if (people is null) return null;
+        var selectAllOpertaionResponse = await _personRepository.SelectAll();
+        if (!selectAllOpertaionResponse.IsSuccessful) return null;
 
-        foreach (var person in people)
+        foreach (var person in selectAllOpertaionResponse.Value!)
         {
             var personDto = new ServiceSelectPersonDto()
             {
@@ -58,30 +58,30 @@ public class PersonService : IPersonService
 
     public async Task<ServiceSelectPersonDto?> SelectByIdAsync(Guid id)
     {
-        var selectedPerson = await _personRepository.SelectById(id);
-        if (selectedPerson is null) return null;
+        var selectOperationResponse = await _personRepository.SelectById(id);
+        if (!selectOperationResponse.IsSuccessful) return null;
 
         var selectedPersonDto = new ServiceSelectPersonDto()
         {
-            Id = selectedPerson.Id,
-            FirstName = selectedPerson.FirstName,
-            LastName = selectedPerson.LastName,
-            NationalCode = selectedPerson.NationalCode
+            Id = selectOperationResponse.Value!.Id,
+            FirstName = selectOperationResponse.Value.FirstName,
+            LastName = selectOperationResponse.Value.LastName,
+            NationalCode = selectOperationResponse.Value.NationalCode
         };
         return selectedPersonDto;
     }
 
     public async Task<ServiceSelectPersonDto?> SelectByNationalCodeAsync(string nationalCode)
     {
-        var selectedPerson = await _personRepository.SelectByNationalCode(nationalCode);
-        if (selectedPerson is null) return null;
+        var selectOperationResponse = await _personRepository.SelectByNationalCode(nationalCode);
+        if (!selectOperationResponse.IsSuccessful) return null;
 
         var selectedPersonDto = new ServiceSelectPersonDto()
         {
-            Id = selectedPerson.Id,
-            FirstName = selectedPerson.FirstName,
-            LastName = selectedPerson.LastName,
-            NationalCode = selectedPerson.NationalCode
+            Id = selectOperationResponse.Value!.Id,
+            FirstName = selectOperationResponse.Value.FirstName,
+            LastName = selectOperationResponse.Value.LastName,
+            NationalCode = selectOperationResponse.Value.NationalCode
         };
         return selectedPersonDto;
     }
@@ -92,14 +92,19 @@ public class PersonService : IPersonService
 
     public async Task<bool> UpdateAsync(ServiceUpdatePersonDto updatePersonDto)
     {
-        var updatedPerson = await _personRepository.SelectById(updatePersonDto.Id);
-        if (updatedPerson is null) return false;
+        var selectOperationResponse = await _personRepository.SelectById(updatePersonDto.Id);
 
-        updatedPerson.FirstName = updatePersonDto.FirstName;
+        if (!selectOperationResponse.IsSuccessful) return false;
+
+        var updatedPerson = selectOperationResponse.Value;
+
+        updatedPerson!.FirstName = updatePersonDto.FirstName;
         updatedPerson.LastName = updatePersonDto.LastName;
         updatedPerson.NationalCode = updatePersonDto.NationalCode;
-        var result = await _personRepository.Update(updatedPerson);
-        return result;
+
+        var updateOperationResponse = await _personRepository.Update(updatedPerson);
+
+        return updateOperationResponse.IsSuccessful;
     }
 
     #endregion
@@ -108,17 +113,19 @@ public class PersonService : IPersonService
 
     public async Task<bool> DeleteAsync(ServiceDeletePersonDto deletePersonDto)
     {
-        var deletedPerson = await _personRepository.SelectById(deletePersonDto.Id);
-        if (deletedPerson is null) return false;
+        var selectOperationResponse = await _personRepository.SelectById(deletePersonDto.Id);
+        if (!selectOperationResponse.IsSuccessful) return false;
 
-        var result = await _personRepository.Delete(deletedPerson);
-        return result;
+        var deletedPerson = selectOperationResponse.Value;
+
+        var deleteOperationResponse = await _personRepository.Delete(deletedPerson!);
+        return deleteOperationResponse.IsSuccessful;
     }
 
     public async Task<bool> DeleteByIdAsync(Guid id)
     {
-        var result = await _personRepository.Delete(id);
-        return result;
+        var deleteOperationResponse = await _personRepository.Delete(id);
+        return deleteOperationResponse.IsSuccessful;
     }
 
     #endregion

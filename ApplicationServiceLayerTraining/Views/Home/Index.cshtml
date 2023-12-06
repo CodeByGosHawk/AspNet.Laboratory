@@ -2,8 +2,12 @@
     ViewData["Title"] = "Home Page";
 }
 
+<h2 class="text-center" style="color:darkblue;font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif">Application Service Training</h2>
+<div id="time" class="text-center" style="font-size:24px;color:darkred;font-family:'Comic Sans MS';margin: 1% 0 1% 0">
+</div>
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
     <input class="btn btn-outline-danger" type="button" value="Person" onclick="location.href='@Url.Action("Index", "Person")'" />
     <input class="btn btn-outline-danger" type="button" value="Product" onclick="location.href='@Url.Action("Index", "Product")'" />
 </div>
+
+<script src="js/home.js"></script>

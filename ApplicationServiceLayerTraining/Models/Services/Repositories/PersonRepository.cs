@@ -1,4 +1,5 @@
-﻿using ApplicationServiceLayerTraining.Models.DomainModels.PersonAggregates;
+﻿using ApplicationServiceLayerTraining.Frameworks;
+using ApplicationServiceLayerTraining.Models.DomainModels.PersonAggregates;
 using ApplicationServiceLayerTraining.Models.Services.Contracts;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,18 +15,24 @@ public class PersonRepository : IPersonRepository
     }
 
     #region[Create]
-    public async Task<bool> Insert(Person person)
+    public async Task<Response<Person>> Insert(Person person)
     {
+        var response = new Response<Person>();
         try
         {
             if (person is not null)
             {
                 await _dbContext.AddAsync(person);
-                return true;
+                response.IsSuccessful = true;
+                response.Status = Status.Successful;
+                response.Message = "Operation successful";
+                return response;
             }
             else
             {
-                return false;
+                response.Status = Status.NullRef;
+                response.Message = "Person is null. operation failed.";
+                return response;
             }
 
         }
@@ -37,11 +44,28 @@ public class PersonRepository : IPersonRepository
     #endregion
 
     #region[Read]
-    public async Task<IEnumerable<Person>> SelectAll()
+    public async Task<Response<IEnumerable<Person>>> SelectAll()
     {
+        var response = new Response<IEnumerable<Person>>();
         try
-        {
-            return await _dbContext.Person.ToListAsync();
+        {           
+            var people = await _dbContext.Person.ToListAsync();
+            if(people is not null)
+            {
+                response.Value = new List<Person>();
+                response.Value = people;
+                response.IsSuccessful = true;
+                response.Status = Status.Successful;
+                response.Message = "Operation successful";
+                return response;
+            }
+            else
+            {
+                response.Status = Status.NotExist;
+                response.Message = $"Selected table is null";
+                return response;
+            }
+
         }
         catch (Exception)
         {
@@ -49,11 +73,27 @@ public class PersonRepository : IPersonRepository
         }
     }
 
-    public async Task<Person> SelectById(Guid id)
+    public async Task<Response<Person>> SelectById(Guid id)
     {
+        var response = new Response<Person>();
         try
         {
-            return await _dbContext.Person.FindAsync(id);
+            var person = await _dbContext.Person.FindAsync(id);
+            if(person is not null)
+            {
+                response.Value = new Person();
+                response.Value = person;
+                response.IsSuccessful = true;
+                response.Status = Status.Successful;
+                response.Message = "Operation successful";
+                return response;
+            }
+            else
+            {
+                response.Status = Status.NotExist;
+                response.Message = $"Person with Id : {id} does not exist in database";
+                return response;
+            }
         }
         catch (Exception)
         {
@@ -61,11 +101,27 @@ public class PersonRepository : IPersonRepository
         }
     }
 
-    public async Task<Person> SelectByNationalCode(string nationalCode)
+    public async Task<Response<Person>> SelectByNationalCode(string nationalCode)
     {
+        var response = new Response<Person>();
         try
         {
-            return await _dbContext.Person.FirstOrDefaultAsync(p => p.NationalCode == nationalCode);
+            var person = await _dbContext.Person.FirstOrDefaultAsync(p => p.NationalCode == nationalCode);
+            if(person is not null)
+            {
+                response.Value = new Person();
+                response.Value = person;
+                response.IsSuccessful = true;
+                response.Status = Status.Successful;
+                response.Message = "Operation successful";
+                return response;
+            }
+            else
+            {
+                response.Status = Status.NotExist;
+                response.Message = $"Person with NationalCode : {nationalCode} does not exist in database";
+                return response;
+            }
         }
         catch (Exception)
         {
@@ -75,19 +131,25 @@ public class PersonRepository : IPersonRepository
     #endregion
 
     #region[Update]
-    public async Task<bool> Update(Person person)
+    public async Task<Response<Person>> Update(Person person)
     {
+        var response = new Response<Person>();
         try
         {
             if (person is not null)
             {
-                _dbContext.Entry(person).State = EntityState.Modified; // Bottleneck ?
-                //_dbContext.Update(person);
-                return true;
+                //_dbContext.Entry(person).State = EntityState.Modified; // Bottleneck ?
+                _dbContext.Update(person);
+                response.IsSuccessful = true;
+                response.Status = Status.Successful;
+                response.Message = "Operation successful";
+                return response;
             }
             else
             {
-                return false;
+                response.Status = Status.NullRef;
+                response.Message = "Person is null. operation failed.";
+                return response;
             }
         }
         catch (Exception)
@@ -98,19 +160,25 @@ public class PersonRepository : IPersonRepository
     #endregion
 
     #region[Delete]
-    public async Task<bool> Delete(Guid id)
+    public async Task<Response<Person>> Delete(Guid id)
     {
+        var response = new Response<Person>();
         try
         {
             var deletedPerson = await _dbContext.Person.FindAsync(id);
             if (deletedPerson is not null)
             {
                 _dbContext.Person.Remove(deletedPerson); // Bottleneck ? 
-                return true;
+                response.IsSuccessful = true;
+                response.Status = Status.Successful;
+                response.Message = "Operation successful";
+                return response;
             }
             else
             {
-                return false;
+                response.Status = Status.NotExist;
+                response.Message = $"Person with Id : {id} does not exist in database";
+                return response;
             }
         }
         catch (Exception)
@@ -119,18 +187,24 @@ public class PersonRepository : IPersonRepository
         }
     }
 
-    public async Task<bool> Delete(Person person)
+    public async Task<Response<Person>> Delete(Person person)
     {
+        var response = new Response<Person>();
         try
         {
             if (person is not null)
             {
                 _dbContext.Person.Remove(person); // Bottleneck ?
-                return true;
+                response.IsSuccessful = true;
+                response.Status = Status.Successful;
+                response.Message = "Operation successful";
+                return response;
             }
             else
             {
-                return false;
+                response.Status = Status.NullRef;
+                response.Message = "Person is null. operation failed.";
+                return response;
             }
         }
         catch (Exception)
