@@ -50,7 +50,7 @@ public class ProductController : Controller
                 Title = product.Title,
                 Quantity = product.Quantity,
                 UnitPrice = product.UnitPrice,
-                ProductCode = product.ProductCode
+                Code = product.Code
             };
             return View(selectProductDto);
         }
@@ -69,13 +69,13 @@ public class ProductController : Controller
     {
         if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var existingProduct = await _productService.SelectByProductCodeAsync(createProductDto.ProductCode);
+        var existingProduct = await _productService.SelectByProductCodeAsync(createProductDto.Code);
         if (ModelState.IsValid && existingProduct is null)
         {
             var serviceCreateProductDto = new ServiceCreateProductDto  /// Unreadable !!!
             {
                 Title = createProductDto.Title,
-                ProductCode = createProductDto.ProductCode,
+                Code = createProductDto.Code,
                 Quantity = createProductDto.Quantity,
                 UnitPrice = createProductDto.UnitPrice
             };
@@ -87,7 +87,7 @@ public class ProductController : Controller
         }
         else if (ModelState.IsValid && existingProduct is not null)
         {
-            TempData["Create"] = $"Product with ProductCode : {createProductDto.ProductCode} already exist";
+            TempData["Create"] = $"Product with ProductCode : {createProductDto.Code} already exist";
             return View();
         }
         else
@@ -113,7 +113,7 @@ public class ProductController : Controller
             Title = product.Title,
             Quantity = product.Quantity,
             UnitPrice = product.UnitPrice,
-            ProductCode = product.ProductCode
+            Code = product.Code
         };
 
         return View(updateProductDto);
@@ -125,7 +125,7 @@ public class ProductController : Controller
         if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
         //if (Id != Product.Id) return NotFound(); // Why ???????? 
-        var existingProduct = await _productService.SelectByProductCodeAsync(updateProductDto.ProductCode);
+        var existingProduct = await _productService.SelectByProductCodeAsync(updateProductDto.Code);
 
         bool updateCondition = (existingProduct is not null && existingProduct.Id == updateProductDto.Id) ||
                                 existingProduct is null;
@@ -140,7 +140,7 @@ public class ProductController : Controller
                 Title = updateProductDto.Title,
                 Quantity = updateProductDto.Quantity,
                 UnitPrice = updateProductDto.UnitPrice,
-                ProductCode = updateProductDto.ProductCode,
+                Code = updateProductDto.Code,
             };
 
             await _productService.UpdateAsync(serviceUpdateProductDto);
@@ -150,7 +150,7 @@ public class ProductController : Controller
         }
         else if (ModelState.IsValid && !updateCondition)
         {
-            TempData["Update"] = $"Product with ProductCode : {updateProductDto.ProductCode} already exist";
+            TempData["Update"] = $"Product with ProductCode : {updateProductDto.Code} already exist";
             return View(updateProductDto);
         }
         else
@@ -175,7 +175,7 @@ public class ProductController : Controller
             Title = product.Title,
             Quantity = product.Quantity,
             UnitPrice = product.UnitPrice,
-            ProductCode = product.ProductCode
+            Code = product.Code
         };
         // هر آیدی که میفرستی به ویو باز خودش آیدی که از ایندکس اومده رو پاس میده به ویو. 
         return View(deleteProductDto);
