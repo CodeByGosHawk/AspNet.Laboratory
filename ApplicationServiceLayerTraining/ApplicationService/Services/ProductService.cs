@@ -23,7 +23,7 @@ public class ProductService : IProductService
         var createdProduct = new Product()
         {
             Id = new Guid(),
-            ProductCode = createProductDto.ProductCode,
+            Code = createProductDto.Code,
             Title = createProductDto.Title,
             Quantity = createProductDto.Quantity,
             UnitPrice = createProductDto.UnitPrice
@@ -47,7 +47,7 @@ public class ProductService : IProductService
             var productDto = new ServiceSelectProductDto()
             {
                 Id = product.Id,
-                ProductCode = product.ProductCode,
+                Code = product.Code,
                 Title = product.Title,
                 Quantity = product.Quantity,
                 UnitPrice = product.UnitPrice
@@ -65,7 +65,7 @@ public class ProductService : IProductService
         var selectedProductDto = new ServiceSelectProductDto()
         {
             Id = selectedProduct.Id,
-            ProductCode = selectedProduct.ProductCode,
+            Code = selectedProduct.Code,
             Title = selectedProduct.Title,
             Quantity = selectedProduct.Quantity,
             UnitPrice = selectedProduct.UnitPrice
@@ -80,7 +80,7 @@ public class ProductService : IProductService
         var selectedProductDto = new ServiceSelectProductDto()
         {
             Id = selectedProduct.Id,
-            ProductCode = selectedProduct.ProductCode,
+            Code = selectedProduct.Code,
             Title = selectedProduct.Title,
             Quantity = selectedProduct.Quantity,
             UnitPrice = selectedProduct.UnitPrice
@@ -97,7 +97,7 @@ public class ProductService : IProductService
         var updatedProduct = await _productRepository.SelectById(updateProductDto.Id);
         if (updatedProduct is null) return false;
 
-        updatedProduct.ProductCode = updateProductDto.ProductCode;
+        updatedProduct.Code = updateProductDto.Code;
         updatedProduct.Title = updateProductDto.Title;
         updatedProduct.Quantity = updateProductDto.Quantity;
         updatedProduct.UnitPrice = updateProductDto.UnitPrice;

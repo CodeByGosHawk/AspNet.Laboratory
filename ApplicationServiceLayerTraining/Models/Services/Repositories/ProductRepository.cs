@@ -65,7 +65,7 @@ public class ProductRepository : IProductRepository
     {
         try
         {
-            return await _dbContext.Product.FirstOrDefaultAsync(p => p.ProductCode == productCode);
+            return await _dbContext.Product.FirstOrDefaultAsync(p => p.Code == productCode);
         }
         catch (Exception)
         {

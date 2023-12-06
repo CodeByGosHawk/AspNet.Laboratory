@@ -25,6 +25,9 @@
             <th>
                 Unit Price
             </th>
+            <th>
+                Price
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -39,6 +42,9 @@
             </td>
             <td>
                 @product.UnitPrice
+            </td>
+            <td>
+                @product.Price
             </td>
             <td>
                 <a asp-action="Update" asp-route-id="@product.Id">Edit</a> | 
