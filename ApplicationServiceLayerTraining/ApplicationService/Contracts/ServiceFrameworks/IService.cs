@@ -1,21 +1,13 @@
-﻿namespace ApplicationServiceLayerTraining.ApplicationService.Contracts.ServiceFrameworks;
+﻿using ApplicationServiceLayerTraining.Frameworks.Contracts;
 
-public interface IService<T,TCreate,TRead,TUpdate,TDelete>
+namespace ApplicationServiceLayerTraining.ApplicationService.Contracts.ServiceFrameworks;
+
+public interface IService<TInsert,TSelect,TSelectAll,TUpdate,TDelete>
 {
-    Task<IEnumerable<TRead>?> SelectAllAsync();
-    Task<TRead?> SelectByIdAsync(Guid Id);
-    Task<bool> InsertAsync(TCreate obj);
-    Task<bool> UpdateAsync(TUpdate obj);
-    Task<bool> DeleteByIdAsync(Guid Id);
-    Task<bool> DeleteAsync(TDelete obj);
+    Task<IResponse<TSelectAll>> SelectAllAsync();
+    Task<IResponse<TSelect>> SelectAsync(TSelect selectDto);
+    Task<IResponse<TInsert>> InsertAsync(TInsert insertDto);
+    Task<IResponse<TUpdate>> UpdateAsync(TUpdate updateDto);
+    Task<IResponse<TDelete>> DeleteAsync(TDelete deleteDto);
     Task SaveAsync();
 }
-
-
-//Task<IEnumerable<T>> SelectAll();
-//Task<T> SelectById(Guid Id);
-//Task<bool> Insert(T obj);
-//Task<bool> Update(T obj);
-//Task<bool> Delete(Guid Id);
-//Task<bool> Delete(T obj);
-//Task Save();

@@ -1,5 +1,9 @@
 ﻿using ApplicationServiceLayerTraining.ApplicationService.Contracts;
+using ApplicationServiceLayerTraining.ApplicationService.Dtos.PersonDtos;
 using ApplicationServiceLayerTraining.ApplicationService.Dtos.ProductDtos;
+using ApplicationServiceLayerTraining.Frameworks;
+using ApplicationServiceLayerTraining.Frameworks.Abstracts;
+using ApplicationServiceLayerTraining.Frameworks.Contracts;
 using ApplicationServiceLayerTraining.Models.DomainModels.ProductAggregates;
 using ApplicationServiceLayerTraining.Models.Services.Contracts;
 
@@ -14,11 +18,19 @@ public class ProductService : IProductService
         _productRepository = productRepository;
     }
 
-    #region[Create]
 
-    public async Task<bool> InsertAsync(ServiceCreateProductDto createProductDto)
+
+  // Create
+    public async Task<IResponse<ServiceCreateProductDto>> InsertAsync(ServiceCreateProductDto createProductDto)
     {
-        if (createProductDto is null) return false;
+        var response = new Response<ServiceCreateProductDto>();
+
+        if (createProductDto is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "Input is null. operation failed.";
+            return response;
+        }
 
         var createdProduct = new Product()
         {
@@ -28,21 +40,63 @@ public class ProductService : IProductService
             Quantity = createProductDto.Quantity,
             UnitPrice = createProductDto.UnitPrice
         };
-        bool result = await _productRepository.Insert(createdProduct);
-        return result;
+        var insertOperationResponse = await _productRepository.Insert(createdProduct);
+
+        if (insertOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository insert operation response is null";
+            return response;
+        }
+
+        if (!insertOperationResponse.IsSuccessful)
+        {
+            response.Status = insertOperationResponse.Status;
+            response.Message = insertOperationResponse.Message;
+            return response;
+        }
+
+        response.IsSuccessful = true;
+        response.Status = Status.Successful;
+        response.Message = "Operation successful";
+        return response;
     }
 
-    #endregion
 
-    #region[Read]
 
-    public async Task<IEnumerable<ServiceSelectProductDto>?> SelectAllAsync()
+  // Read
+    public async Task<IResponse<ServiceSelectAllProductsDto>> SelectAllAsync()
     {
-        List<ServiceSelectProductDto> productsDto = new List<ServiceSelectProductDto>();
-        var products = await _productRepository.SelectAll();
-        if (products is null) return null;
+        var response = new Response<ServiceSelectAllProductsDto>();
+        var selectAllOpertaionResponse = await _productRepository.SelectAll();
 
-        foreach (var product in products)
+        if (selectAllOpertaionResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository select all operation response is null";
+            return response;
+        }
+
+        if (!selectAllOpertaionResponse.IsSuccessful)
+        {
+            response.Status = selectAllOpertaionResponse.Status;
+            response.Message = selectAllOpertaionResponse.Message;
+            return response;
+        }
+
+        if (selectAllOpertaionResponse.Value is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The response value of repository select all operation is null";
+            return response;
+        }
+
+        var selectAllProductsDto = new ServiceSelectAllProductsDto
+        {
+            SelectProductDtosList = []
+        };
+
+        foreach (var product in selectAllOpertaionResponse.Value)
         {
             var productDto = new ServiceSelectProductDto()
             {
@@ -52,86 +106,212 @@ public class ProductService : IProductService
                 Quantity = product.Quantity,
                 UnitPrice = product.UnitPrice
             };
-            productsDto.Add(productDto);
+            selectAllProductsDto.SelectProductDtosList.Add(productDto);
         }
-        return productsDto;
+        response.IsSuccessful = true;
+        response.Status = Status.Successful;
+        response.Message = "Operation successful";
+        response.Value = selectAllProductsDto;
+        return response;
     }
 
-    public async Task<ServiceSelectProductDto?> SelectByIdAsync(Guid id)
+    public async Task<IResponse<ServiceSelectProductDto>> SelectAsync(ServiceSelectProductDto selectProductDto)
     {
-        var selectedProduct = await _productRepository.SelectById(id);
-        if (selectedProduct is null) return null;
+        var response = new Response<ServiceSelectProductDto>();
 
-        var selectedProductDto = new ServiceSelectProductDto()
+        if (selectProductDto is null)
         {
-            Id = selectedProduct.Id,
-            Code = selectedProduct.Code,
-            Title = selectedProduct.Title,
-            Quantity = selectedProduct.Quantity,
-            UnitPrice = selectedProduct.UnitPrice
-        };
-        return selectedProductDto;
-    }
+            response.Status = Status.NullRef;
+            response.Message = "Input is null. operation failed.";
+            return response;
+        }
 
-    public async Task<ServiceSelectProductDto?> SelectByProductCodeAsync(string productCode)
-    {
-        var selectedProduct = await _productRepository.SelectByProductCode(productCode);
-        if (selectedProduct is null) return null;
-        var selectedProductDto = new ServiceSelectProductDto()
+        IResponse<Product> selectOperationResponse;
+
+        if (selectProductDto.Code is null)
         {
-            Id = selectedProduct.Id,
-            Code = selectedProduct.Code,
-            Title = selectedProduct.Title,
-            Quantity = selectedProduct.Quantity,
-            UnitPrice = selectedProduct.UnitPrice
-        };
-        return selectedProductDto;
+            selectOperationResponse = await _productRepository.SelectById(selectProductDto.Id);
+        }
+        else
+        {
+            selectOperationResponse = await _productRepository.SelectByCode(selectProductDto.Code);
+        }
+
+        if (selectOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository select operation response is null";
+            return response;
+        }
+
+        if (!selectOperationResponse.IsSuccessful)
+        {
+            response.Status = selectOperationResponse.Status;
+            response.Message = selectOperationResponse.Message;
+            return response;
+        }
+
+        if (selectOperationResponse.Value is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The response value of repository select operation is null";
+            return response;
+        }
+
+        if (selectProductDto.Code is null)
+        {
+            selectProductDto.Code = selectOperationResponse.Value.Code;
+            selectProductDto.Title = selectOperationResponse.Value.Title;
+            selectProductDto.Quantity = selectOperationResponse.Value.Quantity;
+            selectProductDto.UnitPrice = selectOperationResponse.Value.UnitPrice;
+        }
+        else
+        {
+            selectProductDto.Id = selectOperationResponse.Value.Id;
+            selectProductDto.Title = selectOperationResponse.Value.Title;
+            selectProductDto.Quantity = selectOperationResponse.Value.Quantity;
+            selectProductDto.UnitPrice = selectOperationResponse.Value.UnitPrice;
+        }
+
+        response.IsSuccessful = true;
+        response.Status = Status.Successful;
+        response.Message = "Operation successful";
+        response.Value = selectProductDto;
+        return response;
     }
 
-    #endregion
 
-    #region[Update]
 
-    public async Task<bool> UpdateAsync(ServiceUpdateProductDto updateProductDto)
+  // Update
+    public async Task<IResponse<ServiceUpdateProductDto>> UpdateAsync(ServiceUpdateProductDto updateProductDto)
     {
-        var updatedProduct = await _productRepository.SelectById(updateProductDto.Id);
-        if (updatedProduct is null) return false;
+        var response = new Response<ServiceUpdateProductDto>();
+
+        if (updateProductDto is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "Input is null. operation failed.";
+            return response;
+        }
+
+        var selectOperationResponse = await _productRepository.SelectById(updateProductDto.Id);
+
+        if (selectOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository select operation response is null";
+            return response;
+        }
+
+        if (!selectOperationResponse.IsSuccessful)
+        {
+            response.Status = selectOperationResponse.Status;
+            response.Message = selectOperationResponse.Message;
+            return response;
+        }
+
+        if (selectOperationResponse.Value is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The response value of repository select operation is null";
+            return response;
+        }
+
+        var updatedProduct = selectOperationResponse.Value; 
 
         updatedProduct.Code = updateProductDto.Code;
         updatedProduct.Title = updateProductDto.Title;
         updatedProduct.Quantity = updateProductDto.Quantity;
         updatedProduct.UnitPrice = updateProductDto.UnitPrice;
-        var result = await _productRepository.Update(updatedProduct);
-        return result;
+
+        var updateOperationResponse = await _productRepository.Update(updatedProduct);
+
+        if (updateOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository update operation response is null";
+            return response;
+        }
+
+        if (!updateOperationResponse.IsSuccessful)
+        {
+            response.Status = selectOperationResponse.Status;
+            response.Message = selectOperationResponse.Message;
+            return response;
+        }
+
+        response.IsSuccessful = true;
+        response.Status = Status.Successful;
+        response.Message = "Operation successful";
+        return response;
     }
 
-    #endregion
 
-    #region[Delete]
 
-    public async Task<bool> DeleteAsync(ServiceDeleteProductDto deleteProductDto)
+  // Delete
+    public async Task<IResponse<ServiceDeleteProductDto>> DeleteAsync(ServiceDeleteProductDto deleteProductDto)
     {
-        var deletedProduct = await _productRepository.SelectById(deleteProductDto.Id);
-        if (deletedProduct is null) return false;
+        var response = new Response<ServiceDeleteProductDto>();
 
-        var result = await _productRepository.Delete(deletedProduct);
-        return result;
+        if (deleteProductDto is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "Input is null. operation failed.";
+            return response;
+        }
+
+        var selectOperationResponse = await _productRepository.SelectById(deleteProductDto.Id);
+
+        if (selectOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository select operation response is null";
+            return response;
+        }
+
+        if (!selectOperationResponse.IsSuccessful)
+        {
+            response.Status = selectOperationResponse.Status;
+            response.Message = selectOperationResponse.Message;
+            return response;
+        }
+
+        if (selectOperationResponse.Value is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The response value of repository select operation is null";
+            return response;
+        }
+
+        var deletedProduct = selectOperationResponse.Value;
+
+        var deleteOperationResponse = await _productRepository.Delete(deletedProduct);
+
+        if (deleteOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository delete operation response is null";
+            return response;
+        }
+
+        if (!deleteOperationResponse.IsSuccessful)
+        {
+            response.Status = deleteOperationResponse.Status;
+            response.Message = deleteOperationResponse.Message;
+            return response;
+        }
+
+        response.IsSuccessful = true;
+        response.Status = Status.Successful;
+        response.Message = "Operation successful";
+        return response;
     }
 
-    public async Task<bool> DeleteByIdAsync(Guid id)
-    {
-        var result = await _productRepository.Delete(id);
-        return result;
-    }
 
-    #endregion
 
-    #region[Save]
-
+  // Save
     public async Task SaveAsync()
     {
         await _productRepository.Save();
     }
-
-    #endregion
 }

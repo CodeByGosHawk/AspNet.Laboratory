@@ -1,58 +1,66 @@
 ﻿using ApplicationServiceLayerTraining.ApplicationService.Contracts;
 using ApplicationServiceLayerTraining.ApplicationService.Dtos.PersonDtos;
 using ApplicationServiceLayerTraining.Controllers.Dtos.PersonDtos;
+using ApplicationServiceLayerTraining.Frameworks.Abstracts;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApplicationServiceLayerTraining.Controllers;
 
-public class PersonController : Controller
+public class PersonController(IPersonService personService) : Controller
 {
-    private readonly IPersonService _personService;
-
-    public PersonController(IPersonService personService)
-    {
-        _personService = personService;
-    }
+    private readonly IPersonService _personService = personService;
 
     public async Task<IActionResult> Index()
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var people = await _personService.SelectAllAsync();
-        var selectPeopleDtos = new List<SelectPeopleDto>();
+        var selectAllOperationResponse = await _personService.SelectAllAsync();
 
-        foreach (var person in people)
+        var selectDtos = new List<SelectPersonDto>();
+
+        foreach (var serviceSelectDto in selectAllOperationResponse.Value.SelectPersonDtosList)
         {
-            SelectPeopleDto selectPeopleDto = new SelectPeopleDto()
+            SelectPersonDto selectDto = new()
             {
-                Id = person.Id,
-                FirstName = person.FirstName,
-                LastName = person.LastName
+                Id = serviceSelectDto.Id,
+                FirstName = serviceSelectDto.FirstName,
+                LastName = serviceSelectDto.LastName
             };
-            selectPeopleDtos.Add(selectPeopleDto);
+            selectDtos.Add(selectDto);
         }
 
-        return View(selectPeopleDtos);
+        var selectAllDto = new SelectAllPeopleDto
+        {
+            SelectPersonDtosList = selectDtos
+        };
+
+        return View(selectAllDto);
     }
 
     public async Task<IActionResult> Details(Guid id)
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var person = await _personService.SelectByIdAsync(id);
-        if (person is not null)
+        var serviceSelectDto = new ServiceSelectPersonDto { Id = id };
+;
+        var selectOperationResponse = await _personService.SelectAsync(serviceSelectDto);
+
+        if (selectOperationResponse is null)
         {
-            var selectPersonDto = new SelectPersonDto
-            {
-                Id = person.Id,
-                FirstName = person.FirstName,
-                LastName = person.LastName,
-                NationalCode = person.NationalCode
-            };
-            return View(selectPersonDto);
+            TempData["Index"] = "User not found";
+            return RedirectToAction(nameof(Index));
         }
-        TempData["Index"] = "User not found";
-        return RedirectToAction(nameof(Index));
+
+        var selectDto = new SelectPersonDto
+        {
+            Id = selectOperationResponse.Value.Id,
+            FirstName = selectOperationResponse.Value.FirstName,
+            LastName = selectOperationResponse.Value.LastName,
+            NationalCode = selectOperationResponse.Value.NationalCode
+        };
+
+        return View(selectDto);
     }
 
     public async Task<IActionResult> Create()
@@ -61,28 +69,32 @@ public class PersonController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreatePersonDto createPersonDto)
+    public async Task<IActionResult> Create(CreatePersonDto createDto)
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var existingPerson = await _personService.SelectByNationalCodeAsync(createPersonDto.NationalCode);
-        if (ModelState.IsValid && existingPerson is null)
+        var serviceSelectDto = new ServiceSelectPersonDto { NationalCode =  createDto.NationalCode };
+
+        var selectOperationResponse = await _personService.SelectAsync(serviceSelectDto);
+
+        if (ModelState.IsValid && selectOperationResponse.Status == Status.NotFound) //Enum should be able to check with int !
         {
-            var serviceCreatePersonDto = new ServiceCreatePersonDto    /// Unreadable !!!
+            var serviceCreateDto = new ServiceCreatePersonDto    // Unreadable !!!
             {
-                FirstName = createPersonDto.FirstName,
-                LastName = createPersonDto.LastName,
-                NationalCode = createPersonDto.NationalCode,
+                FirstName = createDto.FirstName,
+                LastName = createDto.LastName,
+                NationalCode = createDto.NationalCode,
             };
 
-            await _personService.InsertAsync(serviceCreatePersonDto);
+            await _personService.InsertAsync(serviceCreateDto);
             await _personService.SaveAsync();
-            TempData["Index"] = $"Person \"{serviceCreatePersonDto.FirstName} {serviceCreatePersonDto.LastName}\" created";
+
+            TempData["Index"] = $"Person \"{serviceCreateDto.FirstName} {serviceCreateDto.LastName}\" created";
             return RedirectToAction(nameof(Index));
         }
-        else if (ModelState.IsValid && existingPerson is not null)
+        else if (ModelState.IsValid && selectOperationResponse.Status == Status.Successful)
         {
-            TempData["Create"] = $"Person with NationalCode : {createPersonDto.NationalCode} already exist";
+            TempData["Create"] = $"Person with NationalCode : {createDto.NationalCode} already exist";
             return View();
         }
         else
@@ -95,55 +107,61 @@ public class PersonController : Controller
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var person = await _personService.SelectByIdAsync(id);
-        if (person is null)
+        var serviceSelectDto = new ServiceSelectPersonDto { Id = id };
+
+        var selectOperationResponse = await _personService.SelectAsync(serviceSelectDto);
+
+        if (selectOperationResponse.Status == Status.NotFound)
         {
             TempData["Index"] = "Person does not exist";
             return RedirectToAction(nameof(Index));
         }
 
-        var updatePersonDto = new UpdatePersonDto
+        var updateDto = new UpdatePersonDto
         {
-            Id = person.Id,
-            FirstName = person.FirstName,
-            LastName = person.LastName,
-            NationalCode = person.NationalCode
+            Id = selectOperationResponse.Value.Id,
+            FirstName = selectOperationResponse.Value.FirstName,
+            LastName = selectOperationResponse.Value.LastName,
+            NationalCode = selectOperationResponse.Value.NationalCode
         };
 
-        return View(updatePersonDto);
+        return View(updateDto);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Update(UpdatePersonDto updatePersonDto)//, Guid Id) //what is id ? 
+    public async Task<IActionResult> Update(UpdatePersonDto updateDto)
     {
-        //if (Id != person.Id) return NotFound(); // Why ????????
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var existingPerson = await _personService.SelectByNationalCodeAsync(updatePersonDto.NationalCode);
-        bool updateCondition = (existingPerson is not null && existingPerson.Id == updatePersonDto.Id) ||
-                                existingPerson is null;
+        var serviceSelectDto = new ServiceSelectPersonDto { NationalCode = updateDto.NationalCode };
+
+        var selectOperationResponse = await _personService.SelectAsync(serviceSelectDto);
+
+        bool updateCondition = (selectOperationResponse.Status == Status.Successful && selectOperationResponse.Value.Id == updateDto.Id) ||
+                                selectOperationResponse.Status == Status.NotFound;
 
         if (ModelState.IsValid && updateCondition)
         {
-            var updatedPerson = await _personService.SelectByIdAsync(updatePersonDto.Id);
-
-            var serviceUpdatePersonDto = new ServiceUpdatePersonDto  /// Unreadable !!!!!
+            var serviceUpdateDto = new ServiceUpdatePersonDto 
             {
-                Id = updatePersonDto.Id,
-                FirstName = updatePersonDto.FirstName,
-                LastName = updatePersonDto.LastName,
-                NationalCode = updatePersonDto.NationalCode,
+                Id = updateDto.Id,
+                FirstName = updateDto.FirstName,
+                LastName = updateDto.LastName,
+                NationalCode = updateDto.NationalCode,
             };
 
-            await _personService.UpdateAsync(serviceUpdatePersonDto);
+            await _personService.UpdateAsync(serviceUpdateDto);
             await _personService.SaveAsync();
-            TempData["Index"] = $"Person \"{updatedPerson.FirstName} {updatedPerson.LastName}\" updated";
+
+            TempData["Index"] = $"Person \"{updateDto.FirstName}" +
+                                $" {updateDto.LastName}\" updated";
+
             return RedirectToAction(nameof(Index));
         }
         else if (ModelState.IsValid && !updateCondition)
         {
-            TempData["Update"] = $"Person with NationalCode : {updatePersonDto.NationalCode} already exist";
-            return View(updatePersonDto);
+            TempData["Update"] = $"Person with NationalCode : {updateDto.NationalCode} already exist";
+            return View(updateDto);
         }
         else
         {
@@ -154,33 +172,37 @@ public class PersonController : Controller
     public async Task<IActionResult> Delete(Guid id)
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
-        Console.WriteLine(id);
-        var person = await _personService.SelectByIdAsync(id);
-        if (person is null)
+
+        var serviceSelectDto = new ServiceSelectPersonDto { Id = id };
+        var selectOperationResponse = await _personService.SelectAsync(serviceSelectDto);
+
+        if (selectOperationResponse.Status == Status.NotFound)
         {
             TempData["Index"] = "Person does not exist";
             return RedirectToAction(nameof(Index));
         }
-        var deletePersonDto = new DeletePersonDto // این اصن خیلی عجیبه ! شِت !!!0
+
+        var deleteDto = new DeletePersonDto
         {
-            Id = new Guid(), // من اینجا آیدی جدید بهش دادم ولی باز قبلی رو شناسایی می کنه پاکش میکنه !0
-            FirstName = person.FirstName,
-            LastName = person.LastName,
-            NationalCode = person.NationalCode
+            Id = new Guid(), 
+            FirstName = selectOperationResponse.Value.FirstName,
+            LastName = selectOperationResponse.Value.LastName,
+            NationalCode = selectOperationResponse.Value.NationalCode
         };
         // هر آیدی که میفرستی به ویو باز خودش آیدی که از ایندکس اومده رو پاس میده به ویو. 
-        return View(deletePersonDto);
+        return View(deleteDto);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Delete(DeletePersonDto deletePersonDto)
+    public async Task<IActionResult> Delete(DeletePersonDto deleteDto)
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
-        var deletedPerson = await _personService.SelectByIdAsync(deletePersonDto.Id);
-        await _personService.DeleteByIdAsync(deletePersonDto.Id);
+        var serviceDeleteDto = new ServiceDeletePersonDto { Id = deleteDto.Id };
+        await _personService.DeleteAsync(serviceDeleteDto);
         await _personService.SaveAsync();
-        TempData["Index"] = $"Person \"{deletedPerson.FirstName} {deletedPerson.LastName}\" deleted";
+
+        TempData["Index"] = $"Person \"{deleteDto.FirstName} {deleteDto.LastName}\" deleted";
         return RedirectToAction(nameof(Index));
     }
 }
