@@ -45,7 +45,7 @@ public class ProductRepository(OnlineShopDbContext dbContext) : IProductReposito
         var response = new Response<IEnumerable<Product>>();
         try
         {
-            var products = await _dbContext.Product.ToListAsync();
+            var products = await _dbContext.Product.AsNoTracking().ToListAsync();
 
             if (products is null)
             {
@@ -80,6 +80,7 @@ public class ProductRepository(OnlineShopDbContext dbContext) : IProductReposito
                 return response;
             }
 
+            _dbContext.Entry(selectedProduct).State = EntityState.Detached; // Ef has no FindAsync with AsNoTracking 
             response.Value = selectedProduct;
             response.IsSuccessful = true;
             response.Status = Status.Successful;
@@ -104,7 +105,7 @@ public class ProductRepository(OnlineShopDbContext dbContext) : IProductReposito
                 return response;
             }
 
-            var product = await _dbContext.Product.FirstOrDefaultAsync(p => p.Code == code);
+            var product = await _dbContext.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Code == code);
 
             if (product is null)
             {
@@ -140,7 +141,8 @@ public class ProductRepository(OnlineShopDbContext dbContext) : IProductReposito
                 return response;
             }
 
-            _dbContext.Entry(updatedProduct).State = EntityState.Modified; // Bottleneck ? 
+            //_dbContext.Entry(updatedProduct).State = EntityState.Modified; // Bottleneck ?
+            _dbContext.Update(updatedProduct);                                                                       
             response.IsSuccessful = true;
             response.Status = Status.Successful;
             response.Message = "Operation successful";

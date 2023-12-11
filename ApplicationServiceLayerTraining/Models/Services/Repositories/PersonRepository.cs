@@ -45,7 +45,7 @@ public class PersonRepository(OnlineShopDbContext dbContext) : IPersonRepository
         var response = new Response<IEnumerable<Person>>();
         try
         {           
-            var people = await _dbContext.Person.ToListAsync();
+            var people = await _dbContext.Person.AsNoTracking().ToListAsync();
 
             if(people is null)
             {
@@ -71,16 +71,17 @@ public class PersonRepository(OnlineShopDbContext dbContext) : IPersonRepository
         var response = new Response<Person>();
         try
         {
-            var person = await _dbContext.Person.FindAsync(id);
+            var selectedPerson = await _dbContext.Person.FindAsync(id);
 
-            if(person is null)
+            if (selectedPerson is null)
             {
                 response.Status = Status.NotFound;
                 response.Message = $"Person with Id : {id} does not exist in database";
                 return response;
             }
 
-            response.Value = person;
+            _dbContext.Entry(selectedPerson).State = EntityState.Detached; // Ef has no FindAsync with AsNoTracking
+            response.Value = selectedPerson;
             response.IsSuccessful = true;
             response.Status = Status.Successful;
             response.Message = "Operation successful";
@@ -105,7 +106,7 @@ public class PersonRepository(OnlineShopDbContext dbContext) : IPersonRepository
                 return response;
             }
 
-            var selectedPerson = await _dbContext.Person.FirstOrDefaultAsync(p => p.NationalCode == nationalCode);
+            var selectedPerson = await _dbContext.Person.AsNoTracking().FirstOrDefaultAsync(p => p.NationalCode == nationalCode);
 
             if(selectedPerson is null)
             {
