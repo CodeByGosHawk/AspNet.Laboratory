@@ -1,6 +1,10 @@
 ﻿using ApplicationServiceLayerTraining.ApplicationService.Contracts;
+using ApplicationServiceLayerTraining.ApplicationService.Dtos.PersonDtos;
 using ApplicationServiceLayerTraining.ApplicationService.Dtos.ProductDtos;
+using ApplicationServiceLayerTraining.ApplicationService.Services;
 using ApplicationServiceLayerTraining.Controllers.Dtos.ProductDtos;
+using ApplicationServiceLayerTraining.Frameworks.Abstracts;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApplicationServiceLayerTraining.Controllers;
@@ -18,45 +22,54 @@ public class ProductController : Controller
     {
         if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var products = await _productService.SelectAllAsync();
+        var selectAllOperationResponse = await _productService.SelectAllAsync();
 
-        var selectProductsDtos = new List<SelectProductsDto>();
+        var selectDtos = new List<SelectProductDto>();
 
-        foreach (var product in products)
+        foreach (var serviceSelectDto in selectAllOperationResponse.Value.SelectProductDtosList)
         {
-            SelectProductsDto selectProductDto = new SelectProductsDto() // problem in choosing names ? 
+            SelectProductDto selectDto = new SelectProductDto()
             {
-                Id = product.Id,
-                Title = product.Title,
-                Quantity = product.Quantity,
-                UnitPrice = product.UnitPrice
+                Id = serviceSelectDto.Id,
+                Title = serviceSelectDto.Title,
+                Quantity = serviceSelectDto.Quantity,
+                UnitPrice = serviceSelectDto.UnitPrice
             };
-            selectProductsDtos.Add(selectProductDto);
+            selectDtos.Add(selectDto);
         }
 
-        return View(selectProductsDtos);
+        var selectAllDto = new SelectAllProductsDto
+        {
+            SelectProductDtosList = selectDtos
+        };
+
+        return View(selectAllDto);
     }
 
     public async Task<IActionResult> Details(Guid id)
     {
         if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
+        var serviceSelectDto = new ServiceSelectProductDto { Id = id };
 
-        var product = await _productService.SelectByIdAsync(id);
-        if (product is not null)
+        var selectOperationResponse = await _productService.SelectAsync(serviceSelectDto);
+
+        if (selectOperationResponse is null)
         {
-            var selectProductDto = new SelectProductDto
-            {
-                Id = product.Id,
-                Title = product.Title,
-                Quantity = product.Quantity,
-                UnitPrice = product.UnitPrice,
-                Code = product.Code
-            };
-            return View(selectProductDto);
+            TempData["Index"] = "Product not found";
+            return RedirectToAction(nameof(Index));
         }
 
-        TempData["Index"] = "Product not found";
-        return RedirectToAction(nameof(Index));
+        var selectDto = new SelectProductDto
+        {
+            Id = selectOperationResponse.Value.Id,
+            Title = selectOperationResponse.Value.Title,
+            Quantity = selectOperationResponse.Value.Quantity,
+            UnitPrice = selectOperationResponse.Value.UnitPrice,
+            Code = selectOperationResponse.Value.Code
+        };
+
+        return View(selectDto);
+
     }
 
     public async Task<IActionResult> Create()
@@ -65,29 +78,33 @@ public class ProductController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(ServiceCreateProductDto createProductDto)
+    public async Task<IActionResult> Create(ServiceCreateProductDto createDto)
     {
         if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var existingProduct = await _productService.SelectByProductCodeAsync(createProductDto.Code);
-        if (ModelState.IsValid && existingProduct is null)
+        var serviceSelectDto = new ServiceSelectProductDto { Code = createDto.Code };
+
+        var selectOperationResponse = await _productService.SelectAsync(serviceSelectDto);
+
+        if (ModelState.IsValid && selectOperationResponse.Status == Status.NotFound) //Enum should be able to check with int !
         {
-            var serviceCreateProductDto = new ServiceCreateProductDto  /// Unreadable !!!
+            var serviceCreateDto = new ServiceCreateProductDto  /// Unreadable !!!
             {
-                Title = createProductDto.Title,
-                Code = createProductDto.Code,
-                Quantity = createProductDto.Quantity,
-                UnitPrice = createProductDto.UnitPrice
+                Title = createDto.Title,
+                Code = createDto.Code,
+                Quantity = createDto.Quantity,
+                UnitPrice = createDto.UnitPrice
             };
 
-            await _productService.InsertAsync(serviceCreateProductDto);
+            await _productService.InsertAsync(serviceCreateDto);
             await _productService.SaveAsync();
-            TempData["Index"] = $"Product \"{serviceCreateProductDto.Title}\" created";
+
+            TempData["Index"] = $"Product \"{serviceCreateDto.Title}\" created";
             return RedirectToAction(nameof(Index));
         }
-        else if (ModelState.IsValid && existingProduct is not null)
+        else if (ModelState.IsValid && selectOperationResponse.Status == Status.Successful)
         {
-            TempData["Create"] = $"Product with ProductCode : {createProductDto.Code} already exist";
+            TempData["Create"] = $"Product with ProductCode : {createDto.Code} already exist";
             return View();
         }
         else
@@ -96,62 +113,65 @@ public class ProductController : Controller
         }
     }
 
-    public async Task<IActionResult> Update(Guid Id)
+    public async Task<IActionResult> Update(Guid id)
     {
         if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var product = await _productService.SelectByIdAsync(Id);
-        if (product is null)
+        var serviceSelectDto = new ServiceSelectProductDto { Id = id };
+
+        var selectOperationResponse = await _productService.SelectAsync(serviceSelectDto);
+
+        if (selectOperationResponse.Status == Status.NotFound)
         {
             TempData["Index"] = "Product does not exist";
             return RedirectToAction(nameof(Index));
         }
 
-        var updateProductDto = new UpdateProductDto
+        var updateDto = new UpdateProductDto
         {
-            Id = product.Id,
-            Title = product.Title,
-            Quantity = product.Quantity,
-            UnitPrice = product.UnitPrice,
-            Code = product.Code
+            Id = selectOperationResponse.Value.Id,
+            Title = selectOperationResponse.Value.Title,
+            Quantity = selectOperationResponse.Value.Quantity,
+            UnitPrice = selectOperationResponse.Value.UnitPrice,
+            Code = selectOperationResponse.Value.Code
         };
 
-        return View(updateProductDto);
+        return View(updateDto);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Update(UpdateProductDto updateProductDto)//, Guid Id) what is id ? 
+    public async Task<IActionResult> Update(UpdateProductDto updateDto)
     {
         if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        //if (Id != Product.Id) return NotFound(); // Why ???????? 
-        var existingProduct = await _productService.SelectByProductCodeAsync(updateProductDto.Code);
+        var serviceSelectDto = new ServiceSelectProductDto { Code = updateDto.Code };
 
-        bool updateCondition = (existingProduct is not null && existingProduct.Id == updateProductDto.Id) ||
-                                existingProduct is null;
+        var selectOperationResponse = await _productService.SelectAsync(serviceSelectDto);
+
+        bool updateCondition = (selectOperationResponse.Status == Status.Successful && selectOperationResponse.Value.Id == updateDto.Id) ||
+                                selectOperationResponse.Status == Status.NotFound;
 
         if (ModelState.IsValid && updateCondition)
         {
-            var updatedProduct = await _productService.SelectByIdAsync(updateProductDto.Id);
-
-            var serviceUpdateProductDto = new ServiceUpdateProductDto  /// Unreadable !!!
+            var serviceUpdateDto = new ServiceUpdateProductDto  /// Unreadable !!!
             {
-                Id = updateProductDto.Id,
-                Title = updateProductDto.Title,
-                Quantity = updateProductDto.Quantity,
-                UnitPrice = updateProductDto.UnitPrice,
-                Code = updateProductDto.Code,
+                Id = updateDto.Id,
+                Title = updateDto.Title,
+                Quantity = updateDto.Quantity,
+                UnitPrice = updateDto.UnitPrice,
+                Code = updateDto.Code,
             };
 
-            await _productService.UpdateAsync(serviceUpdateProductDto);
+            await _productService.UpdateAsync(serviceUpdateDto);
             await _productService.SaveAsync();
-            TempData["Index"] = $"Product \"{updatedProduct.Title}\" successfully updated";
+
+            TempData["Index"] = $"Product \"{updateDto.Title}\" successfully updated";
             return RedirectToAction(nameof(Index));
         }
         else if (ModelState.IsValid && !updateCondition)
         {
-            TempData["Update"] = $"Product with ProductCode : {updateProductDto.Code} already exist";
-            return View(updateProductDto);
+            TempData["Update"] = $"Product with ProductCode : {updateDto.Code} already exist";
+            return View(updateDto);
         }
         else
         {
@@ -159,39 +179,40 @@ public class ProductController : Controller
         }
     }
 
-    public async Task<IActionResult> Delete(Guid Id)
+    public async Task<IActionResult> Delete(Guid id)
     {
         if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var product = await _productService.SelectByIdAsync(Id);
-        if (product is null)
+        var serviceSelectDto = new ServiceSelectProductDto { Id = id };
+        var selectOperationResponse = await _productService.SelectAsync(serviceSelectDto);
+
+        if (selectOperationResponse.Status == Status.NotFound)
         {
             TempData["Index"] = "Product does not exist";
             return RedirectToAction(nameof(Index));
         }
-        var deleteProductDto = new DeleteProductDto // این اصن خیلی عجیبه ! شِت !!!0
+        var deleteDto = new DeleteProductDto
         {
-            Id = new Guid(), // من اینجا آیدی جدید بهش دادم ولی باز قبلی رو شناسایی می کنه پاکش میکنه !0
-            Title = product.Title,
-            Quantity = product.Quantity,
-            UnitPrice = product.UnitPrice,
-            Code = product.Code
+            Id = new Guid(),
+            Title = selectOperationResponse.Value.Title,
+            Quantity = selectOperationResponse.Value.Quantity,
+            UnitPrice = selectOperationResponse.Value.UnitPrice,
+            Code = selectOperationResponse.Value.Code
         };
         // هر آیدی که میفرستی به ویو باز خودش آیدی که از ایندکس اومده رو پاس میده به ویو. 
-        return View(deleteProductDto);
+        return View(deleteDto);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Delete(DeleteProductDto deleteProductDto)
+    public async Task<IActionResult> Delete(DeleteProductDto deleteDto)
     {
         if (_productService is null) return Problem("Entity set 'TrainingProjectDbContext.Product' is null.");
 
-        var deletedProduct = await _productService.SelectByIdAsync(deleteProductDto.Id);
-
-        await _productService.DeleteByIdAsync(deleteProductDto.Id);
+        var serviceDeleteDto = new ServiceDeleteProductDto { Id = deleteDto.Id };
+        await _productService.DeleteAsync(serviceDeleteDto);
         await _productService.SaveAsync();
 
-        TempData["Index"] = $"Product \"{deletedProduct.Title}\" deleted";
+        TempData["Index"] = $"Product \"{deleteDto.Title}\" deleted";
         return RedirectToAction(nameof(Index));
     }
 }

@@ -1,5 +1,5 @@
 ﻿@using ApplicationServiceLayerTraining.Controllers.Dtos.PersonDtos
-@model List<SelectPeopleDto>
+@model SelectAllPeopleDto
 
 @{
     ViewData["Title"] = "Index";
@@ -26,7 +26,7 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var person in Model) {
+@foreach (var person in Model.SelectPersonDtosList) {
         <tr>
             <td>
                 @person.FirstName

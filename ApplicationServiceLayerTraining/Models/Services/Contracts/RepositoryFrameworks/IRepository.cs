@@ -1,13 +1,15 @@
-﻿namespace ApplicationServiceLayerTraining.Models.Services.Contracts.RepositoryFrameworks;
+﻿using ApplicationServiceLayerTraining.Frameworks.Contracts;
 
-public interface IRepository<T> where T : class
+namespace ApplicationServiceLayerTraining.Models.Services.Contracts.RepositoryFrameworks;
+
+public interface IRepository<T, TCollection>
 {
-    Task<IEnumerable<T>> SelectAll();
-    Task<T> SelectById(Guid id);
-    Task<bool> Insert(T obj);
-    Task<bool> Update(T obj);
-    Task<bool> Delete(Guid id);
-    Task<bool> Delete(T obj);
+    Task<IResponse<TCollection>> SelectAll();
+    Task<IResponse<T>> SelectById(Guid id);
+    Task<IResponse<T>> Insert(T obj);
+    Task<IResponse<T>> Update(T obj);
+    Task<IResponse<T>> Delete(T obj);
     Task Save();
+
     //Task<bool> Update(Guid Id, string values);
 }

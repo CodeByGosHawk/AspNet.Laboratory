@@ -1,10 +1,9 @@
 ﻿using ApplicationServiceLayerTraining.ApplicationService.Contracts.ServiceFrameworks;
 using ApplicationServiceLayerTraining.ApplicationService.Dtos.ProductDtos;
-using ApplicationServiceLayerTraining.Models.DomainModels.ProductAggregates;
+using ApplicationServiceLayerTraining.Frameworks.Contracts;
 
 namespace ApplicationServiceLayerTraining.ApplicationService.Contracts;
 
-public interface IProductService : IService<Product,ServiceCreateProductDto,ServiceSelectProductDto,ServiceUpdateProductDto,ServiceDeleteProductDto>
+public interface IProductService : IService<ServiceCreateProductDto, ServiceSelectProductDto, ServiceSelectAllProductsDto, ServiceUpdateProductDto, ServiceDeleteProductDto>
 {
-    Task<ServiceSelectProductDto?> SelectByProductCodeAsync(string productCode);
 }

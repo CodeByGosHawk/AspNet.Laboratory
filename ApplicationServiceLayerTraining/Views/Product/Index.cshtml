@@ -1,5 +1,5 @@
 ﻿@using ApplicationServiceLayerTraining.Controllers.Dtos.ProductDtos
-@model IEnumerable<SelectProductsDto>
+@model SelectAllProductsDto
 
 @{
     ViewData["Title"] = "Index";
@@ -32,7 +32,7 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var product in Model) {
+@foreach (var product in Model.SelectProductDtosList) {
         <tr>
             <td>
                 @product.Title

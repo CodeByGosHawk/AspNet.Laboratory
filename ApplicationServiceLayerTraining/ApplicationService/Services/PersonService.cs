@@ -1,5 +1,8 @@
 ﻿using ApplicationServiceLayerTraining.ApplicationService.Contracts;
 using ApplicationServiceLayerTraining.ApplicationService.Dtos.PersonDtos;
+using ApplicationServiceLayerTraining.Frameworks;
+using ApplicationServiceLayerTraining.Frameworks.Abstracts;
+using ApplicationServiceLayerTraining.Frameworks.Contracts;
 using ApplicationServiceLayerTraining.Models.DomainModels.PersonAggregates;
 using ApplicationServiceLayerTraining.Models.Services.Contracts;
 
@@ -14,11 +17,19 @@ public class PersonService : IPersonService
         _personRepository = personRepository;
     }
 
-    #region[Create]
+  
 
-    public async Task<bool> InsertAsync(ServiceCreatePersonDto createPersonDto)
+    // Create
+    public async Task<IResponse<ServiceCreatePersonDto>> InsertAsync(ServiceCreatePersonDto createPersonDto)
     {
-        if (createPersonDto is null) return false;
+        var response = new Response<ServiceCreatePersonDto>();
+
+        if (createPersonDto is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "Input is null. operation failed.";
+            return response;
+        }
 
         var createdPerson = new Person()
         {
@@ -28,21 +39,63 @@ public class PersonService : IPersonService
             NationalCode = createPersonDto.NationalCode
         };
 
-        bool result = await _personRepository.Insert(createdPerson);
-        return result;
+        var insertOperationResponse = await _personRepository.Insert(createdPerson);
+
+        if(insertOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository insert operation response is null";
+            return response;
+        }
+
+        if (!insertOperationResponse.IsSuccessful)
+        {
+            response.Status = insertOperationResponse.Status;
+            response.Message = insertOperationResponse.Message;
+            return response;
+        }
+
+        response.IsSuccessful = true;
+        response.Status = Status.Successful;
+        response.Message = "Operation successful";
+        return response;
     }
 
-    #endregion
+    
 
-    #region[Read]
-
-    public async Task<IEnumerable<ServiceSelectPersonDto>?> SelectAllAsync()
+    // Read
+    public async Task<IResponse<ServiceSelectAllPeopleDto>> SelectAllAsync()
     {
-        List<ServiceSelectPersonDto> peopleDto = new List<ServiceSelectPersonDto>();
-        var people = await _personRepository.SelectAll();
-        if (people is null) return null;
+        var response = new Response<ServiceSelectAllPeopleDto>();
+        var selectAllOpertaionResponse = await _personRepository.SelectAll();
 
-        foreach (var person in people)
+        if (selectAllOpertaionResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository select all operation response is null";
+            return response;
+        }
+
+        if (!selectAllOpertaionResponse.IsSuccessful)
+        {
+            response.Status = selectAllOpertaionResponse.Status;
+            response.Message = selectAllOpertaionResponse.Message;
+            return response;
+        }
+
+        if (selectAllOpertaionResponse.Value is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The response value of repository select all operation is null";
+            return response;
+        }
+
+        var selectAllPeopleDto = new ServiceSelectAllPeopleDto
+        {
+            SelectPersonDtosList = []
+        };
+
+        foreach (var person in selectAllOpertaionResponse.Value)
         {
             var personDto = new ServiceSelectPersonDto()
             {
@@ -51,84 +104,211 @@ public class PersonService : IPersonService
                 LastName = person.LastName,
                 NationalCode = person.NationalCode
             };
-            peopleDto.Add(personDto);
+            selectAllPeopleDto.SelectPersonDtosList.Add(personDto);
         }
-        return peopleDto;
+
+        response.IsSuccessful = true;
+        response.Status = Status.Successful;
+        response.Message = "Operation successful";
+        response.Value = selectAllPeopleDto;
+        return response;
     }
 
-    public async Task<ServiceSelectPersonDto?> SelectByIdAsync(Guid id)
+    public async Task<IResponse<ServiceSelectPersonDto>> SelectAsync(ServiceSelectPersonDto selectPersonDto)
     {
-        var selectedPerson = await _personRepository.SelectById(id);
-        if (selectedPerson is null) return null;
+        var response = new Response<ServiceSelectPersonDto>();
 
-        var selectedPersonDto = new ServiceSelectPersonDto()
+        if (selectPersonDto is null)
         {
-            Id = selectedPerson.Id,
-            FirstName = selectedPerson.FirstName,
-            LastName = selectedPerson.LastName,
-            NationalCode = selectedPerson.NationalCode
-        };
-        return selectedPersonDto;
-    }
+            response.Status = Status.NullRef;
+            response.Message = "Input is null. operation failed.";
+            return response;
+        }
 
-    public async Task<ServiceSelectPersonDto?> SelectByNationalCodeAsync(string nationalCode)
-    {
-        var selectedPerson = await _personRepository.SelectByNationalCode(nationalCode);
-        if (selectedPerson is null) return null;
+        IResponse<Person> selectOperationResponse;
 
-        var selectedPersonDto = new ServiceSelectPersonDto()
+        if (selectPersonDto.NationalCode is null)
         {
-            Id = selectedPerson.Id,
-            FirstName = selectedPerson.FirstName,
-            LastName = selectedPerson.LastName,
-            NationalCode = selectedPerson.NationalCode
-        };
-        return selectedPersonDto;
+            selectOperationResponse = await _personRepository.SelectById(selectPersonDto.Id);
+        }
+        else
+        {
+            selectOperationResponse = await _personRepository.SelectByNationalCode(selectPersonDto.NationalCode);
+        }
+
+        if (selectOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository select operation response is null";
+            return response;
+        }
+
+        if (!selectOperationResponse.IsSuccessful)
+        {
+            response.Status = selectOperationResponse.Status;
+            response.Message = selectOperationResponse.Message;
+            return response;
+        }
+
+        if (selectOperationResponse.Value is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The response value of repository select operation is null";
+            return response;
+        }
+
+        if(selectPersonDto.NationalCode is null)
+        {
+            selectPersonDto.FirstName = selectOperationResponse.Value.FirstName;
+            selectPersonDto.LastName = selectOperationResponse.Value.LastName;
+            selectPersonDto.NationalCode = selectOperationResponse.Value.NationalCode;
+        }
+        else
+        {
+            selectPersonDto.Id = selectOperationResponse.Value.Id;
+            selectPersonDto.FirstName = selectOperationResponse.Value.FirstName;
+            selectPersonDto.LastName = selectOperationResponse.Value.LastName;
+        }
+
+        response.IsSuccessful = true;
+        response.Status = Status.Successful;
+        response.Message = "Operation successful";
+        response.Value = selectPersonDto;
+        return response;
     }
 
-    #endregion
 
-    #region[Update]
 
-    public async Task<bool> UpdateAsync(ServiceUpdatePersonDto updatePersonDto)
+    // Update
+    public async Task<IResponse<ServiceUpdatePersonDto>> UpdateAsync(ServiceUpdatePersonDto updatePersonDto)
     {
-        var updatedPerson = await _personRepository.SelectById(updatePersonDto.Id);
-        if (updatedPerson is null) return false;
+        var response = new Response<ServiceUpdatePersonDto>();
 
+        if (updatePersonDto is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "Input is null. operation failed.";
+            return response;
+        }
+
+        var selectOperationResponse = await _personRepository.SelectById(updatePersonDto.Id);
+
+        if (selectOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository select operation response is null";
+            return response;
+        }
+
+        if (!selectOperationResponse.IsSuccessful)
+        {
+            response.Status = selectOperationResponse.Status;
+            response.Message = selectOperationResponse.Message;
+            return response;
+        }
+
+        if (selectOperationResponse.Value is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The response value of repository select operation is null";
+            return response;
+        }
+
+        var updatedPerson = selectOperationResponse.Value;
+        
+        // Guard : How to set ModelState for dtos to avoid update with null properties ?
         updatedPerson.FirstName = updatePersonDto.FirstName;
         updatedPerson.LastName = updatePersonDto.LastName;
         updatedPerson.NationalCode = updatePersonDto.NationalCode;
-        var result = await _personRepository.Update(updatedPerson);
-        return result;
+
+        var updateOperationResponse = await _personRepository.Update(updatedPerson);
+
+        if (updateOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository update operation response is null";
+            return response;
+        }
+
+        if (!updateOperationResponse.IsSuccessful)
+        {
+            response.Status = updateOperationResponse.Status;
+            response.Message = updateOperationResponse.Message;
+            return response;
+        }
+
+        response.IsSuccessful = true;
+        response.Status = Status.Successful;
+        response.Message = "Operation successful";
+        return response;
     }
 
-    #endregion
+    
 
-    #region[Delete]
-
-    public async Task<bool> DeleteAsync(ServiceDeletePersonDto deletePersonDto)
+    // Delete
+    public async Task<IResponse<ServiceDeletePersonDto>> DeleteAsync(ServiceDeletePersonDto deletePersonDto)
     {
-        var deletedPerson = await _personRepository.SelectById(deletePersonDto.Id);
-        if (deletedPerson is null) return false;
+        var response = new Response<ServiceDeletePersonDto>();
 
-        var result = await _personRepository.Delete(deletedPerson);
-        return result;
+        if (deletePersonDto is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "Input is null. operation failed.";
+            return response;
+        }
+
+        var selectOperationResponse = await _personRepository.SelectById(deletePersonDto.Id);
+
+        if (selectOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository select operation response is null";
+            return response;
+        }
+
+        if (!selectOperationResponse.IsSuccessful)
+        {
+            response.Status = selectOperationResponse.Status;
+            response.Message = selectOperationResponse.Message;
+            return response;
+        }
+
+        if (selectOperationResponse.Value is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The response value of repository select operation is null";
+            return response;
+        }
+
+        var deletedPerson = selectOperationResponse.Value;
+
+        var deleteOperationResponse = await _personRepository.Delete(deletedPerson);
+
+        if (deleteOperationResponse is null)
+        {
+            response.Status = Status.NullRef;
+            response.Message = "The repository delete operation response is null";
+            return response;
+        }
+
+        if (!deleteOperationResponse.IsSuccessful)
+        {
+            response.Status = deleteOperationResponse.Status;
+            response.Message = deleteOperationResponse.Message;
+            return response;
+        }
+
+        response.IsSuccessful = true;
+        response.Status = Status.Successful;
+        response.Message = "Operation successful";
+        return response;
     }
 
-    public async Task<bool> DeleteByIdAsync(Guid id)
-    {
-        var result = await _personRepository.Delete(id);
-        return result;
-    }
 
-    #endregion
 
-    #region[Save]
-
+    // Save
     public async Task SaveAsync()
     {
         await _personRepository.Save();
     }
-
-    #endregion
 }

@@ -1,117 +1,64 @@
-﻿using ApplicationServiceLayerTraining.Models.DomainModels.PersonAggregates;
+﻿using ApplicationServiceLayerTraining.Frameworks;
+using ApplicationServiceLayerTraining.Frameworks.Abstracts;
+using ApplicationServiceLayerTraining.Frameworks.Contracts;
+using ApplicationServiceLayerTraining.Models.DomainModels.PersonAggregates;
 using ApplicationServiceLayerTraining.Models.Services.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApplicationServiceLayerTraining.Models.Services.Repositories;
 
-public class PersonRepository : IPersonRepository
+public class PersonRepository(OnlineShopDbContext dbContext) : IPersonRepository
 {
-    private readonly OnlineShopDbContext _dbContext;
+    private readonly OnlineShopDbContext _dbContext = dbContext;
 
-    public PersonRepository(OnlineShopDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
 
-    #region[Create]
-    public async Task<bool> Insert(Person person)
+    // Create
+    public async Task<IResponse<Person>> Insert(Person insertedPerson)
     {
+        var response = new Response<Person>();
         try
         {
-            if (person is not null)
+            if (insertedPerson is null)
             {
-                await _dbContext.AddAsync(person);
-                return true;
-            }
-            else
-            {
-                return false;
+                response.Status = Status.NullRef;
+                response.Message = "Input is null. operation failed.";
+                return response;
             }
 
+            await _dbContext.AddAsync(insertedPerson);
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
         }
         catch (Exception)
         {
             throw;
         }
     }
-    #endregion
+    
 
-    #region[Read]
-    public async Task<IEnumerable<Person>> SelectAll()
-    {
-        try
-        {
-            return await _dbContext.Person.ToListAsync();
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
 
-    public async Task<Person> SelectById(Guid id)
+    // Read
+    public async Task<IResponse<IEnumerable<Person>>> SelectAll()
     {
+        var response = new Response<IEnumerable<Person>>();
         try
-        {
-            return await _dbContext.Person.FindAsync(id);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
+        {           
+            var people = await _dbContext.Person.AsNoTracking().ToListAsync();
 
-    public async Task<Person> SelectByNationalCode(string nationalCode)
-    {
-        try
-        {
-            return await _dbContext.Person.FirstOrDefaultAsync(p => p.NationalCode == nationalCode);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
-    #endregion
-
-    #region[Update]
-    public async Task<bool> Update(Person person)
-    {
-        try
-        {
-            if (person is not null)
+            if(people is null)
             {
-                _dbContext.Entry(person).State = EntityState.Modified; // Bottleneck ?
-                //_dbContext.Update(person);
-                return true;
+                response.Status = Status.NotFound;
+                response.Message = $"Selected table was not found";
+                return response;
             }
-            else
-            {
-                return false;
-            }
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
-    #endregion
 
-    #region[Delete]
-    public async Task<bool> Delete(Guid id)
-    {
-        try
-        {
-            var deletedPerson = await _dbContext.Person.FindAsync(id);
-            if (deletedPerson is not null)
-            {
-                _dbContext.Person.Remove(deletedPerson); // Bottleneck ? 
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            response.Value = people;
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
         }
         catch (Exception)
         {
@@ -119,28 +66,125 @@ public class PersonRepository : IPersonRepository
         }
     }
 
-    public async Task<bool> Delete(Person person)
+    public async Task<IResponse<Person>> SelectById(Guid id)
     {
+        var response = new Response<Person>();
         try
         {
-            if (person is not null)
+            var selectedPerson = await _dbContext.Person.FindAsync(id);
+
+            if (selectedPerson is null)
             {
-                _dbContext.Person.Remove(person); // Bottleneck ?
-                return true;
+                response.Status = Status.NotFound;
+                response.Message = $"Person with Id : {id} does not exist in database";
+                return response;
             }
-            else
-            {
-                return false;
-            }
+
+            _dbContext.Entry(selectedPerson).State = EntityState.Detached; // Ef has no FindAsync with AsNoTracking
+            response.Value = selectedPerson;
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
+
         }
         catch (Exception)
         {
             throw;
         }
     }
-    #endregion
 
-    #region[Save]
+    public async Task<IResponse<Person>> SelectByNationalCode(string nationalCode)
+    {
+        var response = new Response<Person>();
+        try
+        {
+            if(nationalCode is null)
+            {
+                response.Status = Status.NullRef;
+                response.Message = "Input is null. operation failed.";
+                return response;
+            }
+
+            var selectedPerson = await _dbContext.Person.AsNoTracking().FirstOrDefaultAsync(p => p.NationalCode == nationalCode);
+
+            if(selectedPerson is null)
+            {
+                response.Status = Status.NotFound;
+                response.Message = $"Person with NationalCode : {nationalCode} does not exist in database";
+                return response;
+            }
+
+            response.Value = selectedPerson;
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+    
+
+
+    // Update
+    public async Task<IResponse<Person>> Update(Person updatedPerson)
+    {
+        var response = new Response<Person>();
+        try
+        {
+            if (updatedPerson is null)
+            {
+                response.Status = Status.NullRef;
+                response.Message = "Input is null. operation failed.";
+                return response;
+            }
+
+            //_dbContext.Entry(person).State = EntityState.Modified; // Bottleneck ?
+            _dbContext.Update(updatedPerson);
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+    
+
+
+    // Delete
+    public async Task<IResponse<Person>> Delete(Person deletedPerson)
+    {
+        var response = new Response<Person>();
+        try
+        {
+            if (deletedPerson is null)
+            {
+                response.Status = Status.NullRef;
+                response.Message = "Input is null. operation failed.";
+                return response;
+            }
+
+            _dbContext.Person.Remove(deletedPerson); // Bottleneck ?
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+    
+
+
+    // Save
     public async Task Save()
     {
         try
@@ -152,5 +196,4 @@ public class PersonRepository : IPersonRepository
             throw;
         }
     }
-    #endregion
 }

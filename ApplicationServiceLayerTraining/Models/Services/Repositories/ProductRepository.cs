@@ -1,116 +1,181 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ApplicationServiceLayerTraining.Models.DomainModels.ProductAggregates;
 using ApplicationServiceLayerTraining.Models.Services.Contracts;
+using ApplicationServiceLayerTraining.Frameworks.Contracts;
+using ApplicationServiceLayerTraining.Frameworks;
+using ApplicationServiceLayerTraining.Frameworks.Abstracts;
 
 namespace ApplicationServiceLayerTraining.Models.Services.Repositories;
 
-public class ProductRepository : IProductRepository
+public class ProductRepository(OnlineShopDbContext dbContext) : IProductRepository
 {
-    private readonly OnlineShopDbContext _dbContext;
+    private readonly OnlineShopDbContext _dbContext = dbContext;
 
-    public ProductRepository(OnlineShopDbContext dbContext) // Primary Constructor Suggest ?!
-    {
-        _dbContext = dbContext;
-    }
 
-    #region[Create]
-    public async Task<bool> Insert(Product product)
+    // Create
+    public async Task<IResponse<Product>> Insert(Product insertedProduct)
     {
+        var response = new Response<Product>();
         try
         {
-            if (product is not null)
+            if (insertedProduct is null)
             {
-                await _dbContext.AddAsync(product);
-                return true;
-            }
-            else
-            {
-                return false;
+                response.Status = Status.NullRef;
+                response.Message = "Input is null. operation failed.";
+                return response;
             }
 
+            await _dbContext.AddAsync(insertedProduct);
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
         }
         catch (Exception)
         {
             throw;
         }
     }
-    #endregion
+    
 
-    #region[Read]
-    public async Task<IEnumerable<Product>> SelectAll()
+
+    // Read
+    public async Task<IResponse<IEnumerable<Product>>> SelectAll()
     {
+        var response = new Response<IEnumerable<Product>>();
         try
         {
-            return await _dbContext.Product.ToListAsync();
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
+            var products = await _dbContext.Product.AsNoTracking().ToListAsync();
 
-    public async Task<Product> SelectById(Guid id)
-    {
-        try
-        {
-            return await _dbContext.Product.FindAsync(id);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
-
-    public async Task<Product> SelectByProductCode(string productCode)
-    {
-        try
-        {
-            return await _dbContext.Product.FirstOrDefaultAsync(p => p.Code == productCode);
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-    }
-    #endregion
-
-    #region[Update]
-    public async Task<bool> Update(Product product)
-    {
-        try
-        {
-            if(product is not null)
+            if (products is null)
             {
-                _dbContext.Entry(product).State = EntityState.Modified; // Bottleneck ? 
-                return true;
+                response.Status = Status.NotFound;
+                response.Message = $"Selected table was not found";
+                return response;
             }
-            else
-            {
-                return false;
-            }
+
+            response.Value = products;
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
         }
         catch (Exception)
         {
             throw;
         }
     }
-    #endregion
 
-    #region[Delete]
-    public async Task<bool> Delete(Guid id)
+    public async Task<IResponse<Product>> SelectById(Guid id)
     {
+        var response = new Response<Product>();
+        try
+        {
+            var selectedProduct = await _dbContext.Product.FindAsync(id);
+
+            if (selectedProduct is null)
+            {
+                response.Status = Status.NotFound;
+                response.Message = $"Product with Id : {id} does not exist in database";
+                return response;
+            }
+
+            _dbContext.Entry(selectedProduct).State = EntityState.Detached; // Ef has no FindAsync with AsNoTracking 
+            response.Value = selectedProduct;
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    public async Task<IResponse<Product>> SelectByCode(string code)
+    {
+        var response = new Response<Product>();
+        try
+        {
+            if (code is null)
+            {
+                response.Status = Status.NullRef;
+                response.Message = "Input is null. operation failed.";
+                return response;
+            }
+
+            var product = await _dbContext.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Code == code);
+
+            if (product is null)
+            {
+                response.Status = Status.NotFound;
+                response.Message = $"Product with Code : {code} does not exist in database";
+                return response;
+            }
+
+            response.Value = product;
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+    
+
+    
+    // Update
+    public async Task<IResponse<Product>> Update(Product updatedProduct)
+    {
+        var response = new Response<Product>();
+        try
+        {
+            if(updatedProduct is null)
+            {
+                response.Status = Status.NullRef;
+                response.Message = "Input is null. operation failed.";
+                return response;
+            }
+
+            //_dbContext.Entry(updatedProduct).State = EntityState.Modified; // Bottleneck ?
+            _dbContext.Update(updatedProduct);                                                                       
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+    
+
+
+    // Delete
+    public async Task<IResponse<Product>> Delete(Guid id)
+    {
+        var response = new Response<Product>();
         try
         {
             var deletedProduct = await _dbContext.Product.FindAsync(id);
-            if (deletedProduct is not null)
+
+            if (deletedProduct is null)
             {
-                _dbContext.Product.Remove(deletedProduct);
-                return true;
+                response.Status = Status.NotFound;
+                response.Message = $"Product with Id : {id} does not exist in database";
+                return response;
             }
-            else
-            {
-                return false;
-            }
+
+            _dbContext.Product.Remove(deletedProduct); // Bottleneck ? 
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
         }
         catch (Exception)
         {
@@ -118,28 +183,33 @@ public class ProductRepository : IProductRepository
         }
     }
 
-    public async Task<bool> Delete(Product product)
-    { 
+    public async Task<IResponse<Product>> Delete(Product deletedProduct)
+    {
+        var response = new Response<Product>();
         try
         {
-            if (product is not null)
+            if (deletedProduct is null)
             {
-                _dbContext.Product.Remove(product);
-                return true;
+                response.Status = Status.NullRef;
+                response.Message = "Product is null. operation failed.";
+                return response;
             }
-            else
-            {
-                return false;
-            }
+
+            _dbContext.Product.Remove(deletedProduct);
+            response.IsSuccessful = true;
+            response.Status = Status.Successful;
+            response.Message = "Operation successful";
+            return response;
         }
         catch (Exception)
         {
             throw;
         }
     } // Bottleneck ?
-    #endregion
+    
 
-    #region[Save]
+
+    // Save
     public async Task Save()
     {
         try
@@ -151,5 +221,4 @@ public class ProductRepository : IProductRepository
             throw;
         }
     }
-    #endregion
 }
