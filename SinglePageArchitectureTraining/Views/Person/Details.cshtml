@@ -1,0 +1,36 @@
+﻿@using SinglePageArchitectureTraining.Controllers.Dtos.PersonDtos
+@model SelectPersonDto
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Person</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            First Name
+        </dt>
+        <dd class = "col-sm-10">
+            @Model.FirstName
+        </dd>
+        <dt class = "col-sm-2">
+            Last Name
+        </dt>
+        <dd class = "col-sm-10">
+            @Model.LastName
+        </dd>
+        <dt class="col-sm-2">
+            National Code
+        </dt>
+        <dd class="col-sm-10">
+            @Model.NationalCode
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Person">Back to List</a>
+</div>

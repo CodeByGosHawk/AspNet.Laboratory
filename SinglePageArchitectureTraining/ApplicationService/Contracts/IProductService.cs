@@ -1,0 +1,9 @@
+﻿using SinglePageArchitectureTraining.ApplicationService.Contracts.ServiceFrameworks;
+using SinglePageArchitectureTraining.ApplicationService.Dtos.ProductDtos;
+using SinglePageArchitectureTraining.Frameworks.Contracts;
+
+namespace SinglePageArchitectureTraining.ApplicationService.Contracts;
+
+public interface IProductService : IService<ServiceCreateProductDto, ServiceSelectProductDto, ServiceSelectAllProductsDto, ServiceUpdateProductDto, ServiceDeleteProductDto>
+{
+}
