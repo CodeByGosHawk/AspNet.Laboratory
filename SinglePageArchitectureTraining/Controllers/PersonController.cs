@@ -54,8 +54,7 @@ public class PersonController(IPersonService personService) : Controller
 
         if (selectOperationResponse is null)
         {
-            TempData["Index"] = "User not found";
-            return RedirectToAction(nameof(GetPeople));
+            return Json("NotFound");
         }
 
         var selectDto = new SelectPersonDto
@@ -66,11 +65,11 @@ public class PersonController(IPersonService personService) : Controller
             NationalCode = selectOperationResponse.Value.NationalCode
         };
 
-        return View(selectDto);
+        return Json(selectDto);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreatePersonDto createDto)
+    public async Task<IActionResult> Create([FromBody]CreatePersonDto createDto)
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
@@ -90,18 +89,15 @@ public class PersonController(IPersonService personService) : Controller
             await _personService.InsertAsync(serviceCreateDto);
             await _personService.SaveAsync();
 
-            return Ok();
-            //TempData["Index"] = $"Person \"{serviceCreateDto.FirstName} {serviceCreateDto.LastName}\" created";
-            //return RedirectToAction(nameof(GetPeople));
+            return Json("Done");
         }
         else if (ModelState.IsValid && selectOperationResponse.Status == Status.Successful)
         {
-            TempData["Create"] = $"Person with NationalCode : {createDto.NationalCode} already exist";
-            return NotFound();
+            return Json("NCError");
         }
         else
         {
-            return BadRequest();
+            return Json("WrongRequest");
         }
     }
 
@@ -131,7 +127,7 @@ public class PersonController(IPersonService personService) : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Update(UpdatePersonDto updateDto)
+    public async Task<IActionResult> Update([FromBody] UpdatePersonDto updateDto)
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
@@ -158,16 +154,15 @@ public class PersonController(IPersonService personService) : Controller
             TempData["Index"] = $"Person \"{updateDto.FirstName}" +
                                 $" {updateDto.LastName}\" updated";
 
-            return RedirectToAction(nameof(GetPeople));
+            return Json("Done");
         }
         else if (ModelState.IsValid && !updateCondition)
         {
-            TempData["Update"] = $"Person with NationalCode : {updateDto.NationalCode} already exist";
-            return View(updateDto);
+            return Json("NCError");
         }
         else
         {
-            return View();
+            return Json("WrongRequest");
         }
     }
 
@@ -196,7 +191,7 @@ public class PersonController(IPersonService personService) : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Delete(DeletePersonDto deleteDto)
+    public async Task<IActionResult> Delete([FromBody]DeletePersonDto deleteDto)
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 

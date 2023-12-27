@@ -5,29 +5,33 @@
     ViewBag.Title = "People List";
 }
 <form id="form">
-    <div class="row form-groups center" id="panelBar">
-        <input class="btn btn-outline-success col-sm-1 m-3" type="button" name="saveButton" id="btnSave" value="Save" /><br />
+    <div class="row form-groups" id="panelBar">
+        <input class="btn btn-success col-sm-1 m-3" type="submit" name="insertButton" id="btnInsert" value="Insert" /><br />
+        <input class="btn btn-warning col-sm-1 m-3" type="button" name="editButton" id="btnEdit" value="Edit" disabled/><br />
+        <input class="btn btn-danger col-sm-1 m-3" type="button" name="deleteAllButton" id="btnDeleteAll" value="Delete All" disabled/><br />
         <input class="btn btn-secondary col-sm-1 m-3" type="button" name="refreshButton" id="btnRefresh" value="Refresh" /><br />
     </div>
+    <div class="form-horizontal">
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+       <div class="form-group">
+            <input hidden id="id" />
+            @Html.LabelFor(model => model.FirstName, "FirstName", new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.TextBoxFor(model => model.FirstName, new { @id = "firstName", @class = "form-control" })
+                <span id="firstNameValidationMessage" class="invalid-feedback"></span>
+            </div>
 
-    <div class="form-group">
-        <input hidden id="Id" />
-        @Html.LabelFor(model => model.FirstName, "FirstName", htmlAttributes: new { @class = "control-label col-md-2" })
-        <div class="col-md-10">
-            @Html.TextBoxFor(model => model.FirstName, new { @id = "firstName", htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(model => model.FirstName, "", new { @class = "text-danger" })
-        </div>
+            @Html.LabelFor(model => model.LastName, "LastName", new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.TextBoxFor(model => model.LastName, new { @id = "lastName", @class = "form-control" })
+                <span id="lastNameValidationMessage" class="invalid-feedback"></span>
+            </div>
 
-        @Html.LabelFor(model => model.LastName, "LastName", htmlAttributes: new { @class = "control-label col-md-2" })
-        <div class="col-md-10">
-            @Html.TextBoxFor(model => model.LastName, new { @id = "lastName", htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(model => model.LastName, "", new { @class = "text-danger" })
-        </div>
-
-        @Html.LabelFor(model => model.NationalCode, "NationalCode", htmlAttributes: new { @class = "control-label col-md-2" })
-        <div class="col-md-10">
-            @Html.TextBoxFor(model => model.NationalCode, new { @id = "nationalCode", htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(model => model.NationalCode, "", new { @class = "text-danger" })
+            @Html.LabelFor(model => model.NationalCode, "NationalCode", new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.TextBoxFor(model => model.NationalCode, new { @id = "nationalCode", @class = "form-control" })
+                <span id="nationalCodeValidationMessage" class="invalid-feedback"></span>
+            </div>
         </div>
     </div>
 </form>
@@ -36,7 +40,13 @@
         <thead>
             <tr>
                 <th>
-                    Full Name
+                    <input type="checkbox" class="form-check-input" id="selectAll">
+                </th>
+                <th>
+                    First Name
+                </th>
+                <th>
+                    Last Name
                 </th>
                 <th>
                     National Code
@@ -50,4 +60,4 @@
 </div>
 <div id="test"></div>
 
-<script src="~/js/SinglePage.js"></script>
+<script src="~/js/Person.js"></script>
