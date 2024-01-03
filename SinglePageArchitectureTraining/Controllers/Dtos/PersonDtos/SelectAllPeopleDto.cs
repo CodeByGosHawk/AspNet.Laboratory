@@ -1,6 +1,6 @@
 ﻿namespace SinglePageArchitectureTraining.Controllers.Dtos.PersonDtos;
 
-public class SelectAllPeopleDto
+public class SelectAllPersonsDto
 {
     public IEnumerable<SelectPersonDto> SelectPersonDtosList { get; set; }
 }

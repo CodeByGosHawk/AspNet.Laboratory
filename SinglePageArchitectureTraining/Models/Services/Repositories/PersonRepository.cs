@@ -1,9 +1,9 @@
 ﻿using SinglePageArchitectureTraining.Frameworks;
-using SinglePageArchitectureTraining.Frameworks.Abstracts;
 using SinglePageArchitectureTraining.Frameworks.Contracts;
 using SinglePageArchitectureTraining.Models.DomainModels.PersonAggregates;
 using SinglePageArchitectureTraining.Models.Services.Contracts;
 using Microsoft.EntityFrameworkCore;
+using SinglePageArchitectureTraining.Frameworks.Enums;
 
 namespace SinglePageArchitectureTraining.Models.Services.Repositories;
 

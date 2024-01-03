@@ -2,7 +2,7 @@
 using SinglePageArchitectureTraining.ApplicationService.Contracts;
 using SinglePageArchitectureTraining.ApplicationService.Dtos.ProductDtos;
 using SinglePageArchitectureTraining.Controllers.Dtos.ProductDtos;
-using SinglePageArchitectureTraining.Frameworks.Abstracts;
+using SinglePageArchitectureTraining.Frameworks.Enums;
 
 namespace ApplicationServiceLayerTraining.Controllers;
 

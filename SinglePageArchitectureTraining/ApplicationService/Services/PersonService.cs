@@ -1,8 +1,8 @@
 ﻿using SinglePageArchitectureTraining.ApplicationService.Contracts;
 using SinglePageArchitectureTraining.ApplicationService.Dtos.PersonDtos;
 using SinglePageArchitectureTraining.Frameworks;
-using SinglePageArchitectureTraining.Frameworks.Abstracts;
 using SinglePageArchitectureTraining.Frameworks.Contracts;
+using SinglePageArchitectureTraining.Frameworks.Enums;
 using SinglePageArchitectureTraining.Models.DomainModels.PersonAggregates;
 using SinglePageArchitectureTraining.Models.Services.Contracts;
 
@@ -64,9 +64,9 @@ public class PersonService : IPersonService
     
 
     // Read
-    public async Task<IResponse<ServiceSelectAllPeopleDto>> SelectAllAsync()
+    public async Task<IResponse<ServiceSelectAllPersonsDto>> SelectAllAsync()
     {
-        var response = new Response<ServiceSelectAllPeopleDto>();
+        var response = new Response<ServiceSelectAllPersonsDto>();
         var selectAllOpertaionResponse = await _personRepository.SelectAll();
 
         if (selectAllOpertaionResponse is null)
@@ -90,7 +90,7 @@ public class PersonService : IPersonService
             return response;
         }
 
-        var selectAllPeopleDto = new ServiceSelectAllPeopleDto
+        var selectAllPeopleDto = new ServiceSelectAllPersonsDto
         {
             SelectPersonDtosList = []
         };

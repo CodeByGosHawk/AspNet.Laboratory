@@ -2,7 +2,7 @@
 using SinglePageArchitectureTraining.ApplicationService.Contracts;
 using SinglePageArchitectureTraining.ApplicationService.Dtos.PersonDtos;
 using SinglePageArchitectureTraining.Controllers.Dtos.PersonDtos;
-using SinglePageArchitectureTraining.Frameworks.Abstracts;
+using SinglePageArchitectureTraining.Frameworks.Enums;
 
 namespace ApplicationServiceLayerTraining.Controllers;
 
@@ -13,9 +13,9 @@ public class PersonController(IPersonService personService) : Controller
 
     public IActionResult Person()
     {
-        var createDto = new CreatePersonDto();
-        return View(createDto);
+        return View();
     }
+
     public async Task<IActionResult> GetPeople()
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
@@ -36,7 +36,7 @@ public class PersonController(IPersonService personService) : Controller
             selectDtos.Add(selectDto);
         }
 
-        var selectAllDto = new SelectAllPeopleDto
+        var selectAllDto = new SelectAllPersonsDto
         {
             SelectPersonDtosList = selectDtos
         };
@@ -69,7 +69,7 @@ public class PersonController(IPersonService personService) : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody]CreatePersonDto createDto)
+    public async Task<IActionResult> Create([FromBody] CreatePersonDto createDto)
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
@@ -86,44 +86,20 @@ public class PersonController(IPersonService personService) : Controller
                 NationalCode = createDto.NationalCode,
             };
 
-            await _personService.InsertAsync(serviceCreateDto);
+            var insertOperationResponse = await _personService.InsertAsync(serviceCreateDto);
             await _personService.SaveAsync();
 
-            return Json("Done");
+            return insertOperationResponse.IsSuccessful ? Ok() : BadRequest();
+
         }
         else if (ModelState.IsValid && selectOperationResponse.Status == Status.Successful)
         {
-            return Json("NCError");
+            return Conflict();
         }
         else
         {
-            return Json("WrongRequest");
+            return BadRequest();
         }
-    }
-
-    public async Task<IActionResult> Update(Guid id)
-    {
-        if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
-
-        var serviceSelectDto = new ServiceSelectPersonDto { Id = id };
-
-        var selectOperationResponse = await _personService.SelectAsync(serviceSelectDto);
-
-        if (selectOperationResponse.Status == Status.NotFound)
-        {
-            TempData["Index"] = "Person does not exist";
-            return RedirectToAction(nameof(GetPeople));
-        }
-
-        var updateDto = new UpdatePersonDto
-        {
-            Id = selectOperationResponse.Value.Id,
-            FirstName = selectOperationResponse.Value.FirstName,
-            LastName = selectOperationResponse.Value.LastName,
-            NationalCode = selectOperationResponse.Value.NationalCode
-        };
-
-        return View(updateDto);
     }
 
     [HttpPost]
@@ -148,58 +124,45 @@ public class PersonController(IPersonService personService) : Controller
                 NationalCode = updateDto.NationalCode,
             };
 
-            await _personService.UpdateAsync(serviceUpdateDto);
+            var updateOpertaionResponse = await _personService.UpdateAsync(serviceUpdateDto);
             await _personService.SaveAsync();
 
-            TempData["Index"] = $"Person \"{updateDto.FirstName}" +
-                                $" {updateDto.LastName}\" updated";
-
-            return Json("Done");
+            return updateOpertaionResponse.IsSuccessful ? Ok() : BadRequest();
         }
         else if (ModelState.IsValid && !updateCondition)
         {
-            return Json("NCError");
+            return Conflict();
         }
         else
         {
-            return Json("WrongRequest");
+            return BadRequest();
         }
-    }
-
-    public async Task<IActionResult> Delete(Guid id)
-    {
-        if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
-
-        var serviceSelectDto = new ServiceSelectPersonDto { Id = id };
-        var selectOperationResponse = await _personService.SelectAsync(serviceSelectDto);
-
-        if (selectOperationResponse.Status == Status.NotFound)
-        {
-            TempData["Index"] = "Person does not exist";
-            return RedirectToAction(nameof(GetPeople));
-        }
-
-        var deleteDto = new DeletePersonDto
-        {
-            Id = new Guid(),
-            FirstName = selectOperationResponse.Value.FirstName,
-            LastName = selectOperationResponse.Value.LastName,
-            NationalCode = selectOperationResponse.Value.NationalCode
-        };
-        // هر آیدی که میفرستی به ویو باز خودش آیدی که از ایندکس اومده رو پاس میده به ویو. 
-        return View(deleteDto);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Delete([FromBody]DeletePersonDto deleteDto)
+    public async Task<IActionResult> Delete([FromBody] DeletePersonDto deleteDto)
     {
         if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
 
         var serviceDeleteDto = new ServiceDeletePersonDto { Id = deleteDto.Id };
-        await _personService.DeleteAsync(serviceDeleteDto);
+        var deleteOperationResponse = await _personService.DeleteAsync(serviceDeleteDto);
         await _personService.SaveAsync();
 
-        TempData["Index"] = $"Person \"{deleteDto.FirstName} {deleteDto.LastName}\" deleted";
-        return RedirectToAction(nameof(Person));
+        return deleteOperationResponse.IsSuccessful ? Ok() : BadRequest();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteSelected([FromBody] DeleteSelectedPersonsDto deleteSelectedDto)
+    {
+        if (_personService is null) return Problem("Entity set 'TrainingProjectDbContext.Person' is null.");
+
+        foreach (var deleteDto in deleteSelectedDto.DeletePersonDtosList)
+        {
+            var serviceDeleteDto = new ServiceDeletePersonDto { Id = deleteDto.Id };
+            await _personService.DeleteAsync(serviceDeleteDto);
+        }
+        await _personService.SaveAsync();
+
+        return Ok();
     }
 }

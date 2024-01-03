@@ -1,5 +1,5 @@
-﻿using SinglePageArchitectureTraining.Frameworks.Abstracts;
-using SinglePageArchitectureTraining.Frameworks.Contracts;
+﻿using SinglePageArchitectureTraining.Frameworks.Contracts;
+using SinglePageArchitectureTraining.Frameworks.Enums;
 
 namespace SinglePageArchitectureTraining.Frameworks;
 

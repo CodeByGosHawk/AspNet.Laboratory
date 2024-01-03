@@ -1,4 +1,4 @@
-﻿using SinglePageArchitectureTraining.Frameworks.Abstracts;
+﻿using SinglePageArchitectureTraining.Frameworks.Enums;
 
 namespace SinglePageArchitectureTraining.Frameworks.Contracts;
 

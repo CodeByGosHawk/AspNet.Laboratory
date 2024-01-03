@@ -3,7 +3,7 @@ using SinglePageArchitectureTraining.Models.DomainModels.ProductAggregates;
 using SinglePageArchitectureTraining.Models.Services.Contracts;
 using SinglePageArchitectureTraining.Frameworks.Contracts;
 using SinglePageArchitectureTraining.Frameworks;
-using SinglePageArchitectureTraining.Frameworks.Abstracts;
+using SinglePageArchitectureTraining.Frameworks.Enums;
 
 namespace SinglePageArchitectureTraining.Models.Services.Repositories;
 

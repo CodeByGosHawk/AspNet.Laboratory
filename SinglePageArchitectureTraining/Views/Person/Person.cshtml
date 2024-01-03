@@ -1,43 +1,50 @@
-﻿@using SinglePageArchitectureTraining.Controllers.Dtos.PersonDtos
-@model CreatePersonDto
-
-@{
+﻿@{
     ViewBag.Title = "People List";
 }
-<form id="form">
+<form id="form" class="needs-validation">
     <div class="row form-groups" id="panelBar">
-        <input class="btn btn-success col-sm-1 m-3" type="submit" name="insertButton" id="btnInsert" value="Insert" /><br />
-        <input class="btn btn-warning col-sm-1 m-3" type="button" name="editButton" id="btnEdit" value="Edit" disabled/><br />
-        <input class="btn btn-danger col-sm-1 m-3" type="button" name="deleteAllButton" id="btnDeleteAll" value="Delete All" disabled/><br />
-        <input class="btn btn-secondary col-sm-1 m-3" type="button" name="refreshButton" id="btnRefresh" value="Refresh" /><br />
+        <input class="btn btn-success col-sm-1 m-2" type="submit" id="btnInsert" value="Insert" />
+        <input class="btn btn-warning col-sm-1 m-2" type="button" id="btnEdit" value="Edit" disabled/>
+        <input class="btn btn-danger col-sm-auto m-2" type="button" id="btnDeleteSelected" value="Delete Selected" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" disabled>
+        <input class="btn btn-secondary col-sm-1 m-2" type="button" id="btnRefresh" value="Refresh" />
+        <strong id="resultMessage" class="col-sm-1 m-2 text-secondary" style="opacity: 0; transition: opacity 0.5s;"></strong>
     </div>
-    <div class="form-horizontal">
-    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-       <div class="form-group">
-            <input hidden id="id" />
-            @Html.LabelFor(model => model.FirstName, "FirstName", new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.TextBoxFor(model => model.FirstName, new { @id = "firstName", @class = "form-control" })
-                <span id="firstNameValidationMessage" class="invalid-feedback"></span>
+    <div class="form-group position-relative">
+        <input hidden id="id" />
+        <div>
+            <div class="row">
+                <div class="col">
+                    <label class="fw-bold">FirstName</label>
+                </div>
+                <div class="col">
+                    <label class="fw-bold">LastName</label>
+                </div>
+                <div class="col">
+                    <label class="fw-bold">NationalCode</label>
+                </div>
             </div>
+            <div class="row">
+                <div class="col">
+                    <input id="firstName" type="text" class="form-control" placeholder="Enter FirstName" autocomplete="off" />
+                    <div id="firstNameValidationMessage" class="invalid-tooltip"></div>
+                </div>
 
-            @Html.LabelFor(model => model.LastName, "LastName", new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.TextBoxFor(model => model.LastName, new { @id = "lastName", @class = "form-control" })
-                <span id="lastNameValidationMessage" class="invalid-feedback"></span>
-            </div>
-
-            @Html.LabelFor(model => model.NationalCode, "NationalCode", new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.TextBoxFor(model => model.NationalCode, new { @id = "nationalCode", @class = "form-control" })
-                <span id="nationalCodeValidationMessage" class="invalid-feedback"></span>
+                <div class="col">
+                    <input id="lastName" type="text" class="form-control" placeholder="Enter LastName" autocomplete="off" />
+                    <div id="lastNameValidationMessage" class="invalid-tooltip"></div>
+                </div>
+                <div class="col">
+                    <input id="nationalCode" type="text" class="form-control" placeholder="Enter 10 digits NationalCode" autocomplete="off" />
+                    <div id="nationalCodeValidationMessage" class="invalid-tooltip"></div>
+                </div>
             </div>
         </div>
     </div>
 </form>
-<div>
-    <table class="table">
-        <thead>
+
+<div class="mt-5">
+    <table class="table table-hover" style="border: 1px solid #f0f0f0 !important">
+        <thead class="table-dark">
             <tr>
                 <th>
                     <input type="checkbox" class="form-check-input" id="selectAll">
@@ -58,6 +65,48 @@
         </tbody>
     </table>
 </div>
-<div id="test"></div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal fade" id="deleteConfirmModal" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Confirm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div id="deleteConfirmModalBody" class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <input hidden id="inDeleteConfirmModalId" />
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="btnDeleteConfirm" type="button" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" data-bs-backdrop="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Person Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div id="detailsModalBody" class="modal-body">
+                <div class="card">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"></li>
+                        <li class="list-group-item"></li>
+                        <li class="list-group-item"></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="~/js/Person.js"></script>

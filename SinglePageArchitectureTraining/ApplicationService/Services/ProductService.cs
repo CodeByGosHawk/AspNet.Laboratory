@@ -2,8 +2,8 @@
 using SinglePageArchitectureTraining.ApplicationService.Dtos.PersonDtos;
 using SinglePageArchitectureTraining.ApplicationService.Dtos.ProductDtos;
 using SinglePageArchitectureTraining.Frameworks;
-using SinglePageArchitectureTraining.Frameworks.Abstracts;
 using SinglePageArchitectureTraining.Frameworks.Contracts;
+using SinglePageArchitectureTraining.Frameworks.Enums;
 using SinglePageArchitectureTraining.Models.DomainModels.ProductAggregates;
 using SinglePageArchitectureTraining.Models.Services.Contracts;
 

@@ -1,4 +1,4 @@
-﻿namespace SinglePageArchitectureTraining.Frameworks.Abstracts;
+﻿namespace SinglePageArchitectureTraining.Frameworks.Enums;
 
 public enum Status
 {
